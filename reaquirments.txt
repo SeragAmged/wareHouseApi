@@ -1,0 +1,4 @@
+fastapi[all]>=0.105.0
+uvicorn>=0.24.0
+sqlalchemy[mssql]>=2.0.23
+python-jose>=3.3.0
