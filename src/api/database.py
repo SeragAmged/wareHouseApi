@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base
