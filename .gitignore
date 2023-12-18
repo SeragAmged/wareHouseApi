@@ -3,3 +3,8 @@
 .env
 src/utils/__pycache__/
 src/api/__pycache__/
+src/api/item/controlers.py
+src/api/item/controllers.py
+src/api/branch/__init__.py
+src/api/branch/controllers.py
+src/api/branch/routs.py

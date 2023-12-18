@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 import enum
 from utils.database import Base
 
-class StatusEnum(enum.Enum):
+
+class StatusEnum(str, enum.Enum):
     available = "available"
     out_of_service = "out of service"
     job_assigned = "job assigned"
@@ -17,7 +18,7 @@ class StatusEnum(enum.Enum):
     test_and_tag_due = "test and tag due"
 
 
-class CommentsEnum(enum.Enum):
+class CommentsEnum(str, enum.Enum):
     needs_action = "needs_action"
     normal = "normal"
 
@@ -26,7 +27,7 @@ class Branch(Base):
     __tablename__ = "branch"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String(255), index=True, nullable=False)
+    name = Column(String(255), index=True, unique=True, nullable=False)
 
     has = relationship("Employee", back_populates="works")
     items = relationship("Item", back_populates="branch_owner")
@@ -123,8 +124,10 @@ class Comment(Base):
                 autoincrement=True, index=True)
 
     comment = Column(String(400), nullable=False)
-    date = Column(Date, default=datetime.now(timezone.utc).date(), nullable=False)
-    time = Column(Time, default=datetime.now(timezone.utc).time(), nullable=False)
+    date = Column(Date, default=datetime.now(
+        timezone.utc).date(), nullable=False)
+    time = Column(Time, default=datetime.now(
+        timezone.utc).time(), nullable=False)
     type = Column(Enum(CommentsEnum),
                   default=CommentsEnum.normal, nullable=False)
 
