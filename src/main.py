@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
 from fastapi import FastAPI
-from api.database import Base, engine
 from api.routes import *
-from utils.database import Base, engine
-
-Base.metadata.create_all(bind=engine)
+from utils.database import engine
+from utils.models import Base
 
 Base.metadata.create_all(bind=engine)
 

@@ -1,2 +1,5 @@
 .venv
 .vscode
+.env
+src/utils/__pycache__/
+src/api/__pycache__/

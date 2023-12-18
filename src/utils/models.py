@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
-from datetime import datetime
-import enum
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Time, Enum
 from sqlalchemy.orm import relationship
-from database import Base
-
+from datetime import datetime
+from datetime import datetime, timezone
+import enum
+from utils.database import Base
 
 class StatusEnum(enum.Enum):
     available = "available"
@@ -27,7 +26,7 @@ class Branch(Base):
     __tablename__ = "branch"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    name = Column(String, index=True, nullable=False)
+    name = Column(String(255), index=True, nullable=False)
 
     has = relationship("Employee", back_populates="works")
     items = relationship("Item", back_populates="branch_owner")
@@ -42,14 +41,14 @@ class Employee(Base):
 
     sesa_id = Column(Integer, unique=True, index=True,
                      nullable=False)
-    first_name = Column(String, index=True, nullable=False)
-    last_name = Column(String, index=True, nullable=False)
-    email = Column(String,  unique=True, index=True, nullable=False)
+    first_name = Column(String(255), index=True, nullable=False)
+    last_name = Column(String(255), index=True, nullable=False)
+    email = Column(String(255),  unique=True, index=True, nullable=False)
 
-    hashed_password = Column(String, nullable=False)
-    phone = Column(String, unique=True, nullable=True)
+    hashed_password = Column(String(255), nullable=False)
+    phone = Column(String(26), unique=True, nullable=True)
 
-    role = Column(String, default="SR", nullable=False)
+    role = Column(String(255), default="SR", nullable=False)
 
     works_at = relationship("Branch", back_populates="has")
 
@@ -67,13 +66,13 @@ class ItemDetail(Base):
     __tablename__ = "itemDetail"
 
     id = Column(Integer, primary_key=True,  autoincrement=True, index=True)
-    name = Column(String, index=True, nullable=False, unique=True)
+    name = Column(String(255), index=True, nullable=False, unique=True)
     image_link = Column(
-        String, default="https://demofree.sirv.com/nope-not-here.jpg", nullable=False)
-    category = Column(String, nullable=True)
-    details = Column(String, nullable=True)
+        String(2083), default="https://demofree.sirv.com/nope-not-here.jpg", nullable=False)
+    category = Column(String(255), nullable=True)
+    details = Column(String(255), nullable=True)
     quantity = Column(Integer, default=0, nullable=False)
-    data_sheet_link = Column(String, default="No pdf!", nullable=True)
+    data_sheet_link = Column(String(2083), default="No pdf!", nullable=True)
 
     items = relationship("Item", back_populates="details")
     has_item_detail_record = relationship(
@@ -94,15 +93,15 @@ class Item(Base):
     calibration_date = Column(Date, nullable=True)
     out_of_calibration = Column(
         Boolean, default=False, nullable=True)
-    calibration_certificate_link = Column(String, nullable=True)
+    calibration_certificate_link = Column(String(2083), nullable=True)
 
     status = Column(Enum(StatusEnum),
                     default=StatusEnum.available, nullable=False)
 
     work_order = Column(Integer, nullable=True)
-    jop_name = Column(String, nullable=True)
+    jop_name = Column(String(255), nullable=True)
 
-    company_lended = Column(String, nullable=True)
+    company_lended = Column(String(255), nullable=True)
     booked = Column(Boolean, default=False, nullable=False)
 
     detail = relationship("ItemDetail", back_populates="items")
@@ -123,9 +122,9 @@ class Comment(Base):
     id = Column(Integer, primary_key=True,
                 autoincrement=True, index=True)
 
-    comment = Column(String, nullable=False)
-    date = Column(Date, default=datetime.utcnow().date(), nullable=False)
-    time = Column(Time, default=datetime.utcnow().time(), nullable=False)
+    comment = Column(String(400), nullable=False)
+    date = Column(Date, default=datetime.now(timezone.utc).date(), nullable=False)
+    time = Column(Time, default=datetime.now(timezone.utc).time(), nullable=False)
     type = Column(Enum(CommentsEnum),
                   default=CommentsEnum.normal, nullable=False)
 
@@ -160,9 +159,9 @@ class CheckOut(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=datetime.utcnow().date(), nullable=False)
+                  default=datetime.now(timezone.utc).date(), nullable=False)
     time = Column(Time, index=True,
-                  default=datetime.utcnow().time(), nullable=False)
+                  default=datetime.now(timezone.utc).time(), nullable=False)
 
     estimated_Check_in_Date = Column(Date, nullable=True)
 
@@ -181,9 +180,9 @@ class CheckIn(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=datetime.utcnow().date(), nullable=False)
+                  default=datetime.now(timezone.utc).date(), nullable=False)
     time = Column(Time, index=True,
-                  default=datetime.utcnow().time(), nullable=False)
+                  default=datetime.now(timezone.utc).time(), nullable=False)
 
     item = relationship("Item", back_populates="check_in")
     employee = relationship("Employee", back_populates="check_in")
@@ -216,5 +215,3 @@ class AddItemRecord(Base):
 
     item = relationship("Item", back_populates="add_item_record")
     employee = relationship("Employee", back_populates="add_item_record")
-
-
