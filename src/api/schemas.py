@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import date, datetime, time, timezone
+from datetime import date, time, datetime,  timezone
 from pydantic import BaseModel
 from utils.models import CommentsEnum, StatusEnum
 
@@ -21,7 +21,7 @@ class Branch(BranchBase):
     items: list["Item"] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class EmployeeBase(BaseModel):
@@ -50,7 +50,7 @@ class Employee(EmployeeBase):
     add_item_record: List["AddItemRecord"] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ItemDetailBase(BaseModel):
@@ -71,7 +71,7 @@ class ItemDetail(ItemDetailBase):
     items: List["Item"] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ItemBase(BaseModel):
@@ -106,7 +106,7 @@ class Item(ItemBase):
     add_item_record: List["AddItemRecord"] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CommentBase(BaseModel):
@@ -116,7 +116,6 @@ class CommentBase(BaseModel):
     date_: date = datetime.now(timezone.utc).date()
     time_: time = datetime.now(timezone.utc).time()
     type: CommentsEnum = CommentsEnum.normal
-   
 
 
 class CommentCreate(CommentBase):
@@ -129,7 +128,7 @@ class Comment(CommentBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class BookBase(BaseModel):
@@ -149,7 +148,7 @@ class Book(BookBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CheckOutBase(BaseModel):
@@ -170,7 +169,7 @@ class CheckOut(CheckOutBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CheckInBase(BaseModel):
@@ -190,12 +189,12 @@ class CheckIn(CheckInBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class AddItemDetailRecordBase(BaseModel):
     employee_id: int
-    tool_id: int
+    item_id: int
     date_: date = datetime.now(timezone.utc).date()
     time_: time = datetime.now(timezone.utc).time()
 
@@ -210,7 +209,7 @@ class AddItemDetailRecord(AddItemDetailRecordBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class AddItemRecordBase(BaseModel):
@@ -230,4 +229,4 @@ class AddItemRecord(AddItemRecordBase):
     employee: Employee
 
     class Config:
-        orm_mode = True
+        from_attributes = True

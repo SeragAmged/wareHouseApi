@@ -1,6 +1,5 @@
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Time, Enum
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from datetime import datetime, timezone
 import enum
 from utils.database import Base
@@ -29,8 +28,8 @@ class Branch(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     name = Column(String(255), index=True, unique=True, nullable=False)
 
-    has = relationship("Employee", back_populates="works")
-    items = relationship("Item", back_populates="branch_owner")
+    employees = relationship("Employee", back_populates="branch")
+    items = relationship("Item", back_populates="branch")
 
 
 class Employee(Base):
@@ -51,16 +50,18 @@ class Employee(Base):
 
     role = Column(String(255), default="SR", nullable=False)
 
-    works_at = relationship("Branch", back_populates="has")
+    branch = relationship("Branch", back_populates="employees")
 
     comments = relationship("Comment", back_populates="employee")
-    check_out = relationship("CheckOut", back_populates="employee")
-    check_in = relationship("CheckIn", back_populates="employee")
-    book = relationship("Book", back_populates="employee")
 
-    add_item_detail_record = relationship(
+    check_outs = relationship("CheckOut", back_populates="employee")
+
+    check_ins = relationship("CheckIn", back_populates="employee")
+    books = relationship("Book", back_populates="employee")
+
+    add_item_detail_records = relationship(
         "AddItemDetailRecord", back_populates="employee")
-    add_item_record = relationship("AddItemRecord", back_populates="employee")
+    add_item_records = relationship("AddItemRecord", back_populates="employee")
 
 
 class ItemDetail(Base):
@@ -75,9 +76,9 @@ class ItemDetail(Base):
     quantity = Column(Integer, default=0, nullable=False)
     data_sheet_link = Column(String(2083), default="No pdf!", nullable=True)
 
-    items = relationship("Item", back_populates="details")
-    has_item_detail_record = relationship(
-        "AddItemDetailRecord", back_populates="item")
+    items = relationship("Item", back_populates="detail")
+    add_item_detail_record = relationship(
+        "AddItemDetailRecord", back_populates="item_detail")
 
 
 class Item(Base):
@@ -105,15 +106,15 @@ class Item(Base):
     company_lended = Column(String(255), nullable=True)
     booked = Column(Boolean, default=False, nullable=False)
 
-    detail = relationship("ItemDetail", back_populates="items")
-    branch_owner = relationship("Branch", back_populates="items")
+    check_outs = relationship("CheckOut", back_populates="item")
+    check_ins = relationship("CheckIn", back_populates="item")
+
+    book = relationship("Book", back_populates="items")
     comments = relationship("Comment", back_populates="item")
 
-    check_out = relationship("CheckOut", back_populates="item")
-    check_in = relationship("CheckIn", back_populates="item")
+    detail = relationship("ItemDetail", back_populates="items")
+    branch = relationship("Branch", back_populates="items")
 
-    add_item_detail_record = relationship(
-        "AddItemDetailRecord", back_populates="item")
     add_item_record = relationship("AddItemRecord", back_populates="item")
 
 
@@ -134,8 +135,8 @@ class Comment(Base):
     employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
     item_id = Column(Integer, ForeignKey(Item.id), index=True, nullable=False)
 
-    item = relationship("Item", back_populates="comments")
     employee = relationship("Employee", back_populates="comments")
+    item = relationship("Item", back_populates="comments")
 
 
 class Book(Base):
@@ -147,8 +148,9 @@ class Book(Base):
         Employee.id), index=True, nullable=False)
     future_check_out_date = Column(Date, nullable=True)
     booked_for_work_order = Column(Integer, nullable=False)
-    item = relationship("Item", back_populates="book")
-    employee = relationship("Employee", back_populates="book")
+
+    items = relationship("Item", back_populates="book")
+    employee = relationship("Employee", back_populates="books")
 
 
 class CheckOut(Base):
@@ -168,8 +170,8 @@ class CheckOut(Base):
 
     estimated_Check_in_Date = Column(Date, nullable=True)
 
-    item = relationship("Item", back_populates="check_out")
-    employee = relationship("Employee", back_populates="check_out")
+    item = relationship("Item", back_populates="check_outs")
+    employee = relationship("Employee", back_populates="check_outs")
 
 
 class CheckIn(Base):
@@ -187,8 +189,8 @@ class CheckIn(Base):
     time = Column(Time, index=True,
                   default=datetime.now(timezone.utc).time(), nullable=False)
 
-    item = relationship("Item", back_populates="check_in")
-    employee = relationship("Employee", back_populates="check_in")
+    item = relationship("Item", back_populates="check_ins")
+    employee = relationship("Employee", back_populates="check_ins")
 
 
 class AddItemDetailRecord(Base):
@@ -197,13 +199,14 @@ class AddItemDetailRecord(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     employee_id = Column(Integer, ForeignKey(
         Employee.id), index=True, nullable=False)
-    tool_id = Column(Integer, ForeignKey(Item.id), nullable=False)
+    item_detail_id = Column(Integer, ForeignKey(ItemDetail.id), nullable=False)
     date = Column(Date, nullable=False)
     time = Column(Time, nullable=False)
 
-    item = relationship("Item", back_populates="add_item_detail_record")
+    item_detail = relationship(
+        "ItemDetail", back_populates="add_item_detail_record")
     employee = relationship(
-        "Employee", back_populates="add_item_detail_record")
+        "Employee", back_populates="add_item_detail_records")
 
 
 class AddItemRecord(Base):
@@ -217,4 +220,4 @@ class AddItemRecord(Base):
     time = Column(Time, nullable=False)
 
     item = relationship("Item", back_populates="add_item_record")
-    employee = relationship("Employee", back_populates="add_item_record")
+    employee = relationship("Employee", back_populates="add_item_records")

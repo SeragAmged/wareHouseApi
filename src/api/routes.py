@@ -5,4 +5,4 @@ router = APIRouter()
 @router.get('/health')
 
 def get_health():
-    return {"massgae": "ok"}
+    return {"massage": "ok"}
