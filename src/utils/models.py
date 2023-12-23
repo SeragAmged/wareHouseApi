@@ -73,7 +73,7 @@ class ItemDetail(Base):
         String(2083), default="https://demofree.sirv.com/nope-not-here.jpg", nullable=False)
     category = Column(String(255), nullable=True)
     details = Column(String(255), nullable=True)
-    quantity = Column(Integer, default=0, nullable=False)
+    quantity = Column(Integer, default=1, nullable=False)
     data_sheet_link = Column(String(2083), default="No pdf!", nullable=True)
 
     items = relationship("Item", back_populates="detail")

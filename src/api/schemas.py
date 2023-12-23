@@ -18,7 +18,7 @@ class BranchCreate(BranchBase):
 class Branch(BranchBase):
     id: int
     employees: List["Employee"] = []
-    items: list["Item"] = []
+    items: List["Item"] = []
 
     class Config:
         from_attributes = True
@@ -26,28 +26,28 @@ class Branch(BranchBase):
 
 class EmployeeBase(BaseModel):
     sesa_id: int
+    branch_id: int
     first_name: str
     last_name: str
     email: str
-    hashed_password: str
     phone: Optional[str]
     role: str = "SR"
-    branch_id: int
 
 
 class EmployeeCreate(EmployeeBase):
-    pass
+    password: str
 
 
 class Employee(EmployeeBase):
     id: int
-    works_at: Branch
+    branch: Branch
+    hashed_password: str
     comments: List["Comment"] = []
-    check_out: List["CheckOut"] = []
-    check_in: List["CheckIn"] = []
-    book: List["Book"] = []
-    add_item_detail_record: List["AddItemDetailRecord"] = []
-    add_item_record: List["AddItemRecord"] = []
+    check_outs: List["CheckOut"] = []
+    check_ins: List["CheckIn"] = []
+    books: List["Book"] = []
+    add_item_detail_records: List["AddItemDetailRecord"] = []
+    add_item_records: List["AddItemRecord"] = []
 
     class Config:
         from_attributes = True
@@ -58,7 +58,7 @@ class ItemDetailBase(BaseModel):
     image_link: str = default_item_detail_image
     category: Optional[str]
     details: Optional[str]
-    quantity: int
+    quantity: int = 1
     data_sheet_link: Optional[str] = default_pdf
 
 
@@ -75,9 +75,9 @@ class ItemDetail(ItemDetailBase):
 
 
 class ItemBase(BaseModel):
+    se_id: int
     item_detail_id: int
     branch_id: int
-    se_id: int
     serial_number: int
     calibratable: bool
     calibration_date: Optional[date]
@@ -93,16 +93,15 @@ class ItemCreate(ItemBase):
 class Item(ItemBase):
     id: int
     detail: ItemDetail
-    branch_owner: Branch
+    branch: Branch
     work_order: Optional[int]
     jop_name: Optional[str]
     company_lended: Optional[str]
     booked: Optional[bool]
     comments: List["Comment"] = []
-    check_out: List["CheckOut"] = []
-    check_in: List["CheckIn"] = []
-    book: List["Book"] = []
-    add_item_detail_record: List["AddItemDetailRecord"] = []
+    check_outs: List["CheckOut"] = []
+    check_ins: List["CheckIn"] = []
+    book: Optional["Book"]
     add_item_record: List["AddItemRecord"] = []
 
     class Config:
@@ -194,7 +193,7 @@ class CheckIn(CheckInBase):
 
 class AddItemDetailRecordBase(BaseModel):
     employee_id: int
-    item_id: int
+    item_detail_id: int
     date_: date = datetime.now(timezone.utc).date()
     time_: time = datetime.now(timezone.utc).time()
 
@@ -205,7 +204,7 @@ class AddItemDetailRecordCreate(AddItemDetailRecordBase):
 
 class AddItemDetailRecord(AddItemDetailRecordBase):
     id: int
-    item: Item
+    item_detail: ItemDetail
     employee: Employee
 
     class Config:
