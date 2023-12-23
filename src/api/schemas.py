@@ -1,10 +1,25 @@
 from typing import List, Optional
 from datetime import date, time, datetime,  timezone
 from pydantic import BaseModel
-from utils.models import CommentsEnum, StatusEnum
+from utils.models import CommentTypesEnum, StatusEnum, OperationTypesEnum
 
 default_item_detail_image: str = "https://demofree.sirv.com/nope-not-here.jpg"
 default_pdf: str = "No pdf!"
+
+
+class TokenBase(BaseModel):
+    employee_id: int
+    token: str
+    expiry_date: date
+
+
+class TokenCreate(TokenBase):
+    pass
+
+
+class Token(TokenBase):
+    id: int
+    employee: "Employee"
 
 
 class BranchBase(BaseModel):
@@ -42,12 +57,13 @@ class Employee(EmployeeBase):
     id: int
     branch: Branch
     hashed_password: str
+    tokens: List["Token"] = []
     comments: List["Comment"] = []
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
     books: List["Book"] = []
-    add_item_detail_records: List["AddItemDetailRecord"] = []
-    add_item_records: List["AddItemRecord"] = []
+    add_item_detail_records: List["ItemDetailRecord"] = []
+    add_item_records: List["ItemRecord"] = []
 
     class Config:
         from_attributes = True
@@ -102,7 +118,7 @@ class Item(ItemBase):
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
     book: Optional["Book"]
-    add_item_record: List["AddItemRecord"] = []
+    add_item_record: List["ItemRecord"] = []
 
     class Config:
         from_attributes = True
@@ -112,9 +128,9 @@ class CommentBase(BaseModel):
     employee_id: int
     item_id: int
     comment: str
-    date_: date = datetime.now(timezone.utc).date()
-    time_: time = datetime.now(timezone.utc).time()
-    type: CommentsEnum = CommentsEnum.normal
+    date: date
+    time: time
+    type: CommentTypesEnum = CommentTypesEnum.normal
 
 
 class CommentCreate(CommentBase):
@@ -154,8 +170,8 @@ class CheckOutBase(BaseModel):
     item_id: int
     employee_id: int
     estimated_Check_in_Date: Optional[date]
-    date_: date = datetime.now(timezone.utc).date()
-    time_: time = datetime.now(timezone.utc).time()
+    date: date
+    time: time
 
 
 class CheckOutCreate(CheckOutBase):
@@ -174,8 +190,8 @@ class CheckOut(CheckOutBase):
 class CheckInBase(BaseModel):
     item_id: int
     employee_id: int
-    date_: date = datetime.now(timezone.utc).date()
-    time_: time = datetime.now(timezone.utc).time()
+    date: date
+    time: time
 
 
 class CheckInCreate(CheckInBase):
@@ -191,18 +207,19 @@ class CheckIn(CheckInBase):
         from_attributes = True
 
 
-class AddItemDetailRecordBase(BaseModel):
+class ItemDetailRecordBase(BaseModel):
     employee_id: int
     item_detail_id: int
-    date_: date = datetime.now(timezone.utc).date()
-    time_: time = datetime.now(timezone.utc).time()
+    date: date
+    time: time
+    type: OperationTypesEnum
 
 
-class AddItemDetailRecordCreate(AddItemDetailRecordBase):
+class ItemDetailRecordCreate(ItemDetailRecordBase):
     pass
 
 
-class AddItemDetailRecord(AddItemDetailRecordBase):
+class ItemDetailRecord(ItemDetailRecordBase):
     id: int
     item_detail: ItemDetail
     employee: Employee
@@ -211,18 +228,19 @@ class AddItemDetailRecord(AddItemDetailRecordBase):
         from_attributes = True
 
 
-class AddItemRecordBase(BaseModel):
+class ItemRecordBase(BaseModel):
     employee_id: int
     item_id: int
-    date_: date = datetime.now(timezone.utc).date()
-    time_: time = datetime.now(timezone.utc).time()
+    date: date
+    time: time
+    type: OperationTypesEnum
 
 
-class AddItemRecordCreate(AddItemRecordBase):
+class ItemRecordCreate(ItemRecordBase):
     pass
 
 
-class AddItemRecord(AddItemRecordBase):
+class ItemRecord(ItemRecordBase):
     id: int
     item: Item
     employee: Employee

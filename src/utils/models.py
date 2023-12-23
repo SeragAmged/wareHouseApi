@@ -1,8 +1,11 @@
-from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Time, Enum
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Time, Enum, func
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
-from utils.database import Base
+from sqlalchemy.orm import declarative_base
+
+from api import employee
+Base = declarative_base()
 
 
 class StatusEnum(str, enum.Enum):
@@ -17,9 +20,15 @@ class StatusEnum(str, enum.Enum):
     test_and_tag_due = "test and tag due"
 
 
-class CommentsEnum(str, enum.Enum):
+class CommentTypesEnum(str, enum.Enum):
     needs_action = "needs_action"
     normal = "normal"
+
+
+class OperationTypesEnum(str, enum.Enum):
+    create = "create"
+    update = "Update"
+    delete = "delete"
 
 
 class Branch(Base):
@@ -59,9 +68,21 @@ class Employee(Base):
     check_ins = relationship("CheckIn", back_populates="employee")
     books = relationship("Book", back_populates="employee")
 
-    add_item_detail_records = relationship(
-        "AddItemDetailRecord", back_populates="employee")
-    add_item_records = relationship("AddItemRecord", back_populates="employee")
+    item_detail_records = relationship(
+        "ItemDetailRecord", back_populates="employee")
+    item_records = relationship("ItemRecord", back_populates="employee")
+
+    tokens = relationship("Token", back_populates="employee")
+
+
+class Token(Base):
+    __tablename__ = 'token'
+    id = Column(Integer, primary_key=True,  autoincrement=True, index=True)
+    employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
+    token = Column(String(255), nullable=False)
+    expiry_date = Column(Date, nullable=False)
+
+    employee = relationship("Employee", back_populates="tokens")
 
 
 class ItemDetail(Base):
@@ -78,7 +99,7 @@ class ItemDetail(Base):
 
     items = relationship("Item", back_populates="detail")
     add_item_detail_record = relationship(
-        "AddItemDetailRecord", back_populates="item_detail")
+        "ItemDetailRecord", back_populates="item_detail")
 
 
 class Item(Base):
@@ -115,7 +136,7 @@ class Item(Base):
     detail = relationship("ItemDetail", back_populates="items")
     branch = relationship("Branch", back_populates="items")
 
-    add_item_record = relationship("AddItemRecord", back_populates="item")
+    add_item_record = relationship("ItemRecord", back_populates="item")
 
 
 class Comment(Base):
@@ -125,12 +146,11 @@ class Comment(Base):
                 autoincrement=True, index=True)
 
     comment = Column(String(400), nullable=False)
-    date = Column(Date, default=datetime.now(
-        timezone.utc).date(), nullable=False)
-    time = Column(Time, default=datetime.now(
-        timezone.utc).time(), nullable=False)
-    type = Column(Enum(CommentsEnum),
-                  default=CommentsEnum.normal, nullable=False)
+    date = Column(Date, default=func.current_date(), nullable=False)
+
+    time = Column(Time, default=func.current_time(), nullable=False)
+    type = Column(Enum(CommentTypesEnum),
+                  default=CommentTypesEnum.normal, nullable=False)
 
     employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
     item_id = Column(Integer, ForeignKey(Item.id), index=True, nullable=False)
@@ -164,9 +184,9 @@ class CheckOut(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=datetime.now(timezone.utc).date(), nullable=False)
+                  default=func.current_date(), nullable=False)
     time = Column(Time, index=True,
-                  default=datetime.now(timezone.utc).time(), nullable=False)
+                  default=func.current_time(), nullable=False)
 
     estimated_Check_in_Date = Column(Date, nullable=True)
 
@@ -185,39 +205,44 @@ class CheckIn(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=datetime.now(timezone.utc).date(), nullable=False)
+                  default=func.current_date(), nullable=False)
     time = Column(Time, index=True,
-                  default=datetime.now(timezone.utc).time(), nullable=False)
+                  default=func.current_time(), nullable=False)
 
     item = relationship("Item", back_populates="check_ins")
     employee = relationship("Employee", back_populates="check_ins")
 
 
-class AddItemDetailRecord(Base):
-    __tablename__ = "addItemDetailRecord"
+class ItemDetailRecord(Base):
+    __tablename__ = "itemDetailRecord"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     employee_id = Column(Integer, ForeignKey(
         Employee.id), index=True, nullable=False)
     item_detail_id = Column(Integer, ForeignKey(ItemDetail.id), nullable=False)
-    date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)
+
+    operation_type = Column(Enum(OperationTypesEnum), nullable=False)
+
+    date = Column(Date, default=func.current_date(), nullable=False)
+    time = Column(Time, default=func.current_time(), nullable=False)
 
     item_detail = relationship(
         "ItemDetail", back_populates="add_item_detail_record")
     employee = relationship(
-        "Employee", back_populates="add_item_detail_records")
+        "Employee", back_populates="item_detail_records")
 
 
-class AddItemRecord(Base):
-    __tablename__ = "addItemRecord"
+class ItemRecord(Base):
+    __tablename__ = "itemRecord"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     employee_id = Column(Integer, ForeignKey(
         Employee.id), index=True, nullable=False)
     item_id = Column(Integer, ForeignKey(Item.id), nullable=False)
-    date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)
+
+    operation_type = Column(Enum(OperationTypesEnum), nullable=False)
+    date = Column(Date,  default=func.current_date(), nullable=False)
+    time = Column(Time, default=func.current_time(), nullable=False)
 
     item = relationship("Item", back_populates="add_item_record")
-    employee = relationship("Employee", back_populates="add_item_records")
+    employee = relationship("Employee", back_populates="item_records")
