@@ -2,9 +2,8 @@ from enum import Enum
 from typing import Dict, List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from api import schemas
 
-from utils import models
+from api import schemas
 from utils.database import session
 from . import controllers as cr
 from api.schemas import BranchCreate
@@ -12,9 +11,6 @@ from api.schemas import BranchCreate
 branch_router = APIRouter()
 
 tags: List[str | Enum] = ["branch"]
-
-# Dependency
-
 
 def get_db():
     db = session
