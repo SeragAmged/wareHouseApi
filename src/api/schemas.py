@@ -93,8 +93,8 @@ class ItemDetail(ItemDetailBase):
 
 class ItemBase(BaseModel):
     se_id: int
-    item_detail_id: int
-    branch_id: int
+    item_detail_id: int =0
+    branch_id: int = 0
     serial_number: int
     calibratable: bool
     calibration_date: Optional[date]
@@ -104,7 +104,8 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    pass
+    item_detail_name : str
+    branch_name : str
 
 
 class Item(ItemBase):
