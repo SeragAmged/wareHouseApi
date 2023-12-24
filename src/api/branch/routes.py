@@ -8,7 +8,7 @@ from utils.database import session
 from . import controllers as cr
 from api.schemas import BranchCreate
 
-router = APIRouter()
+branch_router = APIRouter()
 
 tags: List[str | Enum] = ["branch"]
 
@@ -20,22 +20,27 @@ def get_db():
         db.close()
 
 
-@router.post('/branches', response_model=schemas.Branch, tags=tags)
+@branch_router.post('/branches', response_model=schemas.Branch, tags=tags)
 def create_branch(branch: BranchCreate, db: Session = Depends(get_db)):
-    return cr.create_branch(db=db, branch=branch)
+    return cr.add_branch(db=db, branch=branch)
 
 
-@router.get('/branches', response_model=List[schemas.Branch], tags=tags)
+@branch_router.get('/branches', response_model=List[schemas.Branch], tags=tags)
 def get_branches(db: Session = Depends(get_db)):
     return cr.get_branches(db=db)
 
 
-@router.put('/branches', response_model=schemas.Branch, tags=tags)
+@branch_router.get('/branchEmployees/{name}', response_model=Dict[str, List[schemas.Employee]], tags=tags)
+def get_branch_employees(name: str, db: Session = Depends(get_db)):
+    return {"employees": cr.get_branch_employees(db=db, branch_name=name)}
+
+
+@branch_router.put('/branches', response_model=schemas.Branch, tags=tags)
 def update_branch(name: str, branch: BranchCreate, db: Session = Depends(get_db),):
     return cr.update_branch_by_name(db=db, name=name, branch=branch)
 
 
-@router.delete('/branches', response_model=Dict, tags=tags)
+@branch_router.delete('/branches', response_model=Dict, tags=tags)
 def delete_branch(name: str, db: Session = Depends(get_db)):
     cr.delete_branch_by_name(db=db, name=name)
     return {"message": f"Branch {name} hade been deleted"}

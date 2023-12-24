@@ -1,3 +1,45 @@
+from fastapi import HTTPException
+from utils import models
+from api import schemas
+from typing import List
+from sqlalchemy.orm import Session
+from api.branch.controllers import get_branch_by_name
+from api.item_detail.controllers import get_item_details_by_name
+
+
+
+#Add Item 
+
+def create_item_record(db:Session):
+    pass
+
+def add_item(db:Session,item:schemas.ItemCreate):
+    item_details = get_item_details_by_name(db,item.item_detail_name)
+    branch=get_branch_by_name(db,item.branch_name)
+    if item_details is None or branch is None :
+        raise HTTPException(status_code=400, detail="item details or branch is Not found")
+    else:
+        item.branch_id=branch[0].id
+        item.item_detail_id=item_details[0].id
+        db_item = models.Item(**item.model_dump())
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+        return db_item
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # NOTE: DONT FORGET TO UPDATE STATUS IF NEEDED
 # NOTE: admin and user is only for routs
 
