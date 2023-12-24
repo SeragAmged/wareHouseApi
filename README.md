@@ -30,5 +30,3 @@ DATABASE_NAME = 'wareHouseMS'
 USER_NAME = 'sa'
 PASSWORD = 'your password'
 ```
-
-no worries  test
