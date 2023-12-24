@@ -12,6 +12,7 @@ branch_router = APIRouter()
 
 tags: List[str | Enum] = ["branch"]
 
+
 def get_db():
     db = session
     try:
@@ -28,6 +29,11 @@ def create_branch(branch: BranchCreate, db: Session = Depends(get_db)):
 @branch_router.get('/branches', response_model=List[schemas.Branch], tags=tags)
 def get_branches(db: Session = Depends(get_db)):
     return cr.get_branches(db=db)
+
+
+@branch_router.get('/branchEmployees/{name}', response_model=Dict[str, List[schemas.Employee]], tags=tags)
+def get_branch_employees(name: str, db: Session = Depends(get_db)):
+    return {"employees": cr.get_branch_employees(db=db, branch_name=name)}
 
 
 @branch_router.put('/branches', response_model=schemas.Branch, tags=tags)
