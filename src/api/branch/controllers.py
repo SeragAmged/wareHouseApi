@@ -157,7 +157,7 @@ def get_branch_items(db: Session, branch_name: str) -> List[models.Item]:
         return items
     else:
         raise HTTPException(
-            status_code=400, detail="Branch name is not found")
+            status_code=404, detail="Branch name is not found")
 
 
 # TODO:

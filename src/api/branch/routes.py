@@ -36,6 +36,11 @@ def get_branch_employees(name: str, db: Session = Depends(get_db)):
     return {"employees": cr.get_branch_employees(db=db, branch_name=name)}
 
 
+@branch_router.get('/branchItems/{name}', response_model=Dict[str, List[schemas.Item]], tags=tags)
+def get_branch_Items(name: str, db: Session = Depends(get_db)):
+    return {"items": cr.get_branch_items(db=db, branch_name=name)}
+
+
 @branch_router.put('/branches', response_model=schemas.Branch, tags=tags)
 def update_branch(name: str, branch: BranchCreate, db: Session = Depends(get_db),):
     return cr.update_branch_by_name(db=db, name=name, branch=branch)
