@@ -4,7 +4,8 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from api import schemas
-from utils import models, auth, validators
+from api.auth import auth
+from utils import models, validators
 
 
 def get_employee_detail(db: Session, id: int) -> models.Employee | None:
@@ -30,8 +31,9 @@ def get_employee_details(db: Session, skip: int = 0, limit: int = 100) -> List[m
 def check_uniqueness(db: Session, employee: schemas.EmployeeBase) -> int:
     if get_employee_by_sesa(db, employee.sesa_id):
         return 1
-    if get_employee_by_phone(db, employee.phone):
-        return 2
+    if employee.phone:
+        if get_employee_by_phone(db, employee.phone):
+            return 2
     if get_employee_by_email(db, employee.email):
         return 3
     return 0
