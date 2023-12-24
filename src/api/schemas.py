@@ -84,7 +84,7 @@ class ItemDetailCreate(ItemDetailBase):
 
 class ItemDetail(ItemDetailBase):
     id: int
-    quantity: int = 0
+    quantity: int
     items: List["Item"] = []
 
     class Config:
@@ -106,7 +106,7 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     item_detail_name : str
     branch_name : str
-    employee_name : str
+    employee_email : str
 
 
 class Item(ItemBase):

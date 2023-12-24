@@ -11,3 +11,4 @@ src/api/employee/__pycache__/
 src/api/item/__pycache__/
 
 src/api/item_detail/__pycache__/
+src/api/auth/__pycache__/

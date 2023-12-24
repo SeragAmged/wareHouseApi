@@ -5,13 +5,11 @@ from typing import List
 from sqlalchemy.orm import Session
 from api.branch.controllers import get_branch_by_name
 from api.item_detail.controllers import get_item_details_by_name
-from wareHouseApi.src.api import employee
+from api.employee.controllers import get_employee_by_email
 
 
 
 #Add Item 
-def get_employee(db:Session,first_name:str) -> models.Employee | None:
-    return db.query(models.Employee).filter(models.Employee.first_name == first_name).first()
 
 def add_item_record(db:Session,item_record:schemas.ItemRecordCreate) -> models.ItemRecord | None:
     db_item_record = models.ItemRecord(**item_record.model_dump())
@@ -23,12 +21,12 @@ def add_item(db:Session,item:schemas.ItemCreate):
     #check Validity of Data
     item_details = get_item_details_by_name(db,item.item_detail_name)
     branch=get_branch_by_name(db,item.branch_name)
-    employee=get_employee(db,item.employee_name)
+    employee=get_employee_by_email(db,item.employee_email)
     
     if item_details is None or branch is None or employee is None:
         raise HTTPException(status_code=400, detail="item details or branch or employee is Not found")
     
-    
+    item_details[0].quantity=item_details[0].quantity +1
     item.branch_id=branch[0].id
     item.item_detail_id=item_details[0].id
     db_item = models.Item(**item.model_dump())
