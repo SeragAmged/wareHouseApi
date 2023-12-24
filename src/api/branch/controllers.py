@@ -5,6 +5,8 @@ from typing import List
 from sqlalchemy.orm import Session
 
 # read
+
+
 def get_branch_by_id(db: Session, id: int) -> models.Branch | None:
     return db.query(models.Branch).filter(models.Branch.id == id).first()
 
@@ -48,10 +50,15 @@ def update_branch_by_name(db: Session, name: str, branch: schemas.BranchCreate):
             status_code=400, detail="Branch is not found")
 
     if get_branch_by_name(db=db, name=branch.name):
-        raise HTTPException(status_code=400, detail="Branch name is already used")
+        raise HTTPException(
+            status_code=400, detail="Branch name is already used")
 
     for key, value in branch.model_dump().items():
         setattr(db_branch_update, key, value)
     db.commit()
     db.refresh(db_branch_update)
     return db_branch_update
+
+# TODO:
+# get branch employees by branch name (list all employees in branch x)
+# get branch items by branch name (list all items in branch x)

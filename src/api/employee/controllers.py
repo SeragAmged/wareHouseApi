@@ -1,17 +1,15 @@
 #TODO:
-# add emp
-#create emp depends on branch name not id (may need edit in model)
+
+# ONLY FOR ADMINS
+# ADD EMPLOYEE
+# create emp depends on branch name not id (may need edit in model)
 # email validation ---@---.--
-#list contains numbers admin sesas_id [1111,2222,3333,4444,5555]
-# set role for admin
-#else set role user
+# if user register with sesa_id in the admins.txt file set his role to admin(NOTE:each line contains sesa_id)
+# ⬆️ ^^ use deferent function for reading the admins file and store it in the memory(variable)
 
-# delete item with se_id
-# also add records for it with type from the enums
 
-# update item with se_id
-# also add records for it with type from the enums
 
-# get item by id
-# get item by se_id
-# get item by serial_number
+#create comment
+#book item if it's available
+#Check_out item if it's available and change item status to job assigned
+#check_in item if he is the one who checked it out

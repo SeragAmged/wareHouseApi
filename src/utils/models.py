@@ -1,6 +1,5 @@
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, Time, Enum, func
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
 import enum
 from sqlalchemy.orm import declarative_base
 
@@ -31,6 +30,11 @@ class OperationTypesEnum(str, enum.Enum):
     delete = "delete"
 
 
+class RolesEnum(int, enum.Enum):
+    user = 0
+    admin = 1
+
+
 class Branch(Base):
     __tablename__ = "branch"
 
@@ -57,7 +61,7 @@ class Employee(Base):
     hashed_password = Column(String(255), nullable=False)
     phone = Column(String(26), unique=True, nullable=True)
 
-    role = Column(String(255), default="SR", nullable=False)
+    role = Column(Enum(RolesEnum), nullable=False)
 
     branch = relationship("Branch", back_populates="employees")
 
@@ -121,10 +125,6 @@ class Item(Base):
     status = Column(Enum(StatusEnum),
                     default=StatusEnum.available, nullable=False)
 
-    work_order = Column(Integer, nullable=True)
-    jop_name = Column(String(255), nullable=True)
-
-    company_lended = Column(String(255), nullable=True)
     booked = Column(Boolean, default=False, nullable=False)
 
     check_outs = relationship("CheckOut", back_populates="item")
@@ -187,6 +187,11 @@ class CheckOut(Base):
                   default=func.current_date(), nullable=False)
     time = Column(Time, index=True,
                   default=func.current_time(), nullable=False)
+    
+    work_order = Column(Integer, nullable=True)
+    jop_name = Column(String(255), nullable=True)
+
+    company_lended = Column(String(255), nullable=True)
 
     estimated_Check_in_Date = Column(Date, nullable=True)
 

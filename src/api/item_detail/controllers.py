@@ -28,3 +28,7 @@ def get_branches(db: Session, skip: int = 0, limit: int = 100) -> List[models.Br
 # get itemdetail by name
 # get itemdetail by id
 
+
+# Get CURRENT available items
+
+#TODO:add quantity trigger for inserting

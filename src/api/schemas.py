@@ -74,7 +74,7 @@ class ItemDetailBase(BaseModel):
     image_link: str = default_item_detail_image
     category: Optional[str]
     details: Optional[str]
-    quantity: int = 1
+    
     data_sheet_link: Optional[str] = default_pdf
 
 
@@ -84,6 +84,7 @@ class ItemDetailCreate(ItemDetailBase):
 
 class ItemDetail(ItemDetailBase):
     id: int
+    quantity: int = 0
     items: List["Item"] = []
 
     class Config:
@@ -110,10 +111,8 @@ class Item(ItemBase):
     id: int
     detail: ItemDetail
     branch: Branch
-    work_order: Optional[int]
-    jop_name: Optional[str]
-    company_lended: Optional[str]
-    booked: Optional[bool]
+    
+    booked: bool =False
     comments: List["Comment"] = []
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
@@ -169,6 +168,9 @@ class Book(BookBase):
 class CheckOutBase(BaseModel):
     item_id: int
     employee_id: int
+    work_order: Optional[int]
+    jop_name: Optional[str]
+    company_lended: Optional[str]
     estimated_Check_in_Date: Optional[date]
     date: date
     time: time
@@ -180,6 +182,7 @@ class CheckOutCreate(CheckOutBase):
 
 class CheckOut(CheckOutBase):
     id: int
+    
     item: Item
     employee: Employee
 
