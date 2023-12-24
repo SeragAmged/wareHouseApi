@@ -40,7 +40,7 @@ def get_branches(db: Session, skip: int = 0, limit: int = 100) -> List[models.Br
 
 
 # create
-def create_branch(db: Session, branch: schemas.BranchCreate) -> models.Branch:
+def add_branch(db: Session, branch: schemas.BranchCreate) -> models.Branch:
     """creates a new branch if it was not in the db
 
     Args:

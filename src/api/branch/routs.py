@@ -23,7 +23,7 @@ def get_db():
 
 @branch_router.post('/branches', response_model=schemas.Branch, tags=tags)
 def create_branch(branch: BranchCreate, db: Session = Depends(get_db)):
-    return cr.create_branch(db=db, branch=branch)
+    return cr.add_branch(db=db, branch=branch)
 
 
 @branch_router.get('/branches', response_model=List[schemas.Branch], tags=tags)
