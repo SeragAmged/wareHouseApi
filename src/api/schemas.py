@@ -106,6 +106,7 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     item_detail_name : str
     branch_name : str
+    employee_name : str
 
 
 class Item(ItemBase):
@@ -235,8 +236,6 @@ class ItemDetailRecord(ItemDetailRecordBase):
 class ItemRecordBase(BaseModel):
     employee_id: int
     item_id: int
-    date: date
-    time: time
     type: OperationTypesEnum
 
 
@@ -245,6 +244,8 @@ class ItemRecordCreate(ItemRecordBase):
 
 
 class ItemRecord(ItemRecordBase):
+    date: date
+    time: time
     id: int
     item: Item
     employee: Employee
