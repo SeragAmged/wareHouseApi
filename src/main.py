@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from api.routes import router
-from api.branch.routs import branch_router
-from api.item.routs import item_router
+from api.branch.routes import branch_router
+from api.item.routes import item_router
 from utils.database import engine
 from utils.models import Base
 
