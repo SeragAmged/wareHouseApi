@@ -5,7 +5,6 @@ from typing import List
 from sqlalchemy.orm import Session
 from api.branch.controllers import get_branch_by_name
 from api.item_detail.controllers import get_item_details_by_name
-from wareHouseApi.src.api import employee
 
 
 

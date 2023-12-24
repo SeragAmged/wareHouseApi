@@ -8,7 +8,7 @@ from api.auth import auth
 from utils import models, validators
 
 
-def get_employee_detail(db: Session, id: int) -> models.Employee | None:
+def get_employee_by_id(db: Session, id: int) -> models.Employee | None:
     return db.query(models.Employee).filter(models.Employee.id == id).first()
 
 
@@ -24,7 +24,7 @@ def get_employee_by_email(db: Session, email: str) -> models.Employee | None:
     return db.query(models.Employee).filter(models.Employee.email == email).first()
 
 
-def get_employee_details(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
+def get_all_employees(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
     return db.query(models.Employee).offset(skip).limit(limit).all()
 
 

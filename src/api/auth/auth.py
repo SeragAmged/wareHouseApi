@@ -49,15 +49,18 @@ class AuthHandler:
         username: str = payload.get("sub")
         exp: datetime = payload.get("exp")
         if username is None:
-            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Could not validate credentials", {
+                                "WWW-Authenticate": "Bearer"})
         if exp < datetime.utcnow():
-            raise HTTPException(401, "Session expired", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Session expired", {
+                                "WWW-Authenticate": "Bearer"})
         token_data = Token(username=username)
-        user = controllers.get_employee_detail(db, id=token_data.employee_id)
+        user = controllers.get_employee_by_id(db, id=token_data.employee_id)
         if user is None:
-            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Could not validate credentials", {
+                                "WWW-Authenticate": "Bearer"})
         return user
 
     @staticmethod
     async def get_current_active_user(db: Session, current_user: Employee = Depends(get_current_user)):
-        return controllers.get_employee_detail(db, current_user.id)
+        return controllers.get_employee_by_id(db, current_user.id)
