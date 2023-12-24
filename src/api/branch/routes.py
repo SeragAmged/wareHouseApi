@@ -12,7 +12,6 @@ branch_router = APIRouter()
 
 tags: List[str | Enum] = ["branch"]
 
-
 def get_db():
     db = session
     try:
