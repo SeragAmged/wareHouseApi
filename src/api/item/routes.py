@@ -23,3 +23,7 @@ def get_db():
 @item_router.post('/items', response_model=schemas.Item, tags=tags)
 def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     return cr.add_item(db=db, item=item)
+
+@item_router.get('/items/records', response_model=List[schemas.ItemRecord], tags=tags)
+def get_itemR(db: Session = Depends(get_db)):
+    return cr.get_item_records(db=db)

@@ -95,10 +95,10 @@ class ItemDetail(Base):
     id = Column(Integer, primary_key=True,  autoincrement=True, index=True)
     name = Column(String(255), index=True, nullable=False, unique=True)
     image_link = Column(
-        String(2083), default="https://demofree.sirv.com/nope-not-here.jpg", nullable=False)
+        String(2083), default="https://demofree.sirv.com/nope-not-here.jpg")
     category = Column(String(255), nullable=True)
     details = Column(String(255), nullable=True)
-    quantity = Column(Integer, default=0, nullable=False)
+    quantity = Column(Integer, default=0)
     data_sheet_link = Column(String(2083), default="No pdf!")
 
     items = relationship("Item", back_populates="detail")
