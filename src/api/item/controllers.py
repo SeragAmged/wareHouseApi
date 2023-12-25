@@ -24,7 +24,7 @@ def add_item(db:Session,item:schemas.ItemCreate):
     employee=get_employee_by_email(db,item.employee_email)
     
     if item_details is None or branch is None or employee is None:
-        raise HTTPException(status_code=400, detail="item details or branch or employee is Not found")
+        raise HTTPException(status_code=404, detail="item details or branch or employee is Not found")
     
     item_details[0].quantity=item_details[0].quantity +1
     item.branch_id=branch[0].id
