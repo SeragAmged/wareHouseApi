@@ -4,11 +4,11 @@ from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 
 from api import schemas
-from utils import models, auth, validators
-from utils.database import get_db
+from api.auth import auth
+from utils import models, validators
 
 
-def get_employee_detail(db: Session, id: int) -> models.Employee | None:
+def get_employee_by_id(db: Session, id: int) -> models.Employee | None:
     return db.query(models.Employee).filter(models.Employee.id == id).first()
 
 
@@ -24,7 +24,7 @@ def get_employee_by_email(db: Session, email: str) -> models.Employee | None:
     return db.query(models.Employee).filter(models.Employee.email == email).first()
 
 
-def get_employee_details(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
+def get_all_employees(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
     return db.query(models.Employee).offset(skip).limit(limit).all()
 
 def get_employee_by_token(db: Session, token: str) -> models.Employee:
@@ -34,8 +34,9 @@ def get_employee_by_token(db: Session, token: str) -> models.Employee:
 def check_uniqueness(db: Session, employee: schemas.EmployeeBase) -> int:
     if get_employee_by_sesa(db, employee.sesa_id):
         return 1
-    if get_employee_by_phone(db, employee.phone):
-        return 2
+    if employee.phone:
+        if get_employee_by_phone(db, employee.phone):
+            return 2
     if get_employee_by_email(db, employee.email):
         return 3
     return 0

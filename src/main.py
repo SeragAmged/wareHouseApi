@@ -3,6 +3,7 @@ from api.routes import router
 from api.branch.routes import branch_router
 from api.employee.routes import employee_router
 from api.item.routes import item_router
+from api.item_detail.routes import item_details_router
 from utils.database import engine
 from utils.models import Base
 
@@ -13,3 +14,4 @@ app.include_router(router)
 app.include_router(branch_router)
 app.include_router(item_router)
 app.include_router(employee_router)
+app.include_router(item_details_router)

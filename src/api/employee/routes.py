@@ -7,13 +7,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from api import schemas
+from api.auth.auth import AuthHandler
+from utils.database import session
 from api.employee import controllers as cr
 from utils import models
-from utils.auth import AuthHandler
 from utils.database import get_db
-
-import tracemalloc
-tracemalloc.start()
 
 employee_router = APIRouter()
 
