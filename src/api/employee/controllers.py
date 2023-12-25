@@ -3,6 +3,7 @@ from typing import List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+import api.branch.controllers
 from api import schemas
 from api.auth import auth
 from utils import models, validators
@@ -17,7 +18,7 @@ def get_employee_by_sesa(db: Session, sesa_id: int) -> models.Employee | None:
 
 
 def get_employee_by_phone(db: Session, phone: str) -> models.Employee | None:
-    return db.query(models.Employee).filter(models.Employee.phone == phone).first()
+    return (db.query(models.Employee).filter(models.Employee.phone == phone).first())
 
 
 def get_employee_by_email(db: Session, email: str) -> models.Employee | None:
@@ -27,35 +28,30 @@ def get_employee_by_email(db: Session, email: str) -> models.Employee | None:
 def get_all_employees(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
     return db.query(models.Employee).offset(skip).limit(limit).all()
 
-def get_employee_by_token(db: Session, token: str) -> models.Employee:
-    return db.query(models.Token).filter(models.Token.token == token).first()
+
+def verify_employee_exists(employee: models.Employee) -> models.Employee:
+    if employee is None:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return employee
 
 
-def check_uniqueness(db: Session, employee: schemas.EmployeeBase) -> int:
-    if get_employee_by_sesa(db, employee.sesa_id):
-        return 1
-    if employee.phone:
-        if get_employee_by_phone(db, employee.phone):
-            return 2
-    if get_employee_by_email(db, employee.email):
-        return 3
-    return 0
-
-
-def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Employee:
-    # TODO: Check if branch being referenced exists
+def verify_attributes(db: Session, employee: schemas.EmployeeBase) -> None:
     if not validators.is_sesa_id_valid(employee.sesa_id):
         raise HTTPException(422, {"error": "Given sesa id is invalid", "field": "sesa_id"})
     if not validators.is_valid_email(employee.email):
         raise HTTPException(422, {"error": "Given email is invalid", "field": "email"})
-    unique = check_uniqueness(db, employee)
-    if unique == 1:
+    if get_employee_by_sesa(db, employee.sesa_id):
         raise HTTPException(422, {"error": "Employee with same sesa ID already registered", "field": "sesa_id"})
-    if unique == 2:
+    if employee.phone and get_employee_by_phone(db, employee.phone):
         raise HTTPException(422, {"error": "Employee with same phone number already registered", "field": "phone"})
-    if unique == 3:
+    if get_employee_by_email(db, employee.email):
         raise HTTPException(422, {"error": "Employee with same email address already registered", "field": "email"})
+    if api.branch.controllers.get_branch_by_id(db, employee.branch_id) is None:
+        raise HTTPException(422, {"error": "Branch doesn't exist", "field": "branch"})
 
+
+def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Employee:
+    verify_attributes(db, employee)
     emp_model = employee.model_dump()
     emp_model["hashed_password"] = auth.AuthHandler.get_password_hash(emp_model["password"])
     del emp_model["password"]
@@ -66,29 +62,13 @@ def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Emp
     return db_employee
 
 
-def update_employee(db: Session, sesa_id: int, employee: schemas.EmployeeCreate):
-    db_employee = get_employee_by_sesa(db=db, sesa_id=sesa_id)
-    if db_employee is None:
-        raise HTTPException(401, "Employee doesn't exist (How did you get here?")
-    # TODO: check if user has the permission to update
-
-    if not validators.is_sesa_id_valid(employee.sesa_id):
-        raise HTTPException(422, {"error": "Given sesa id is invalid", "field": "sesa_id"})
-    if validators.is_valid_email(employee.email):
-        raise HTTPException(422, {"error": "Given email is invalid", "field": "email"})
-    unique = check_uniqueness(db, employee)
-    if unique == 1:
-        raise HTTPException(422, {"error": "Employee with same sesa ID already registered", "field": "sesa_id"})
-    if unique == 2:
-        raise HTTPException(422, {"error": "Employee with same phone number already registered", "field": "phone"})
-    if unique == 3:
-        raise HTTPException(422, {"error": "Employee with same email address already registered", "field": "email"})
-
+def update_employee(db: Session, employee: schemas.EmployeeCreate):
+    verify_attributes(db, employee)
     for key, value in employee.model_dump().items():
-        setattr(db_employee, key, value)
+        setattr(employee, key, value)
     db.commit()
-    db.refresh(db_employee)
-    return db_employee
+    db.refresh(employee)
+    return employee
 
 
 def delete_employee(db: Session, sesa_id: int) -> None:

@@ -50,7 +50,6 @@ class EmployeeCreate(EmployeeBase):
 class Employee(EmployeeBase):
     id: int
     branch: "BranchBase"
-    hashed_password: str
     comments: List["Comment"] = []
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
@@ -60,6 +59,10 @@ class Employee(EmployeeBase):
 
     class Config:
         from_attributes = True
+
+
+class EmployeeSecret(Employee):
+    hashed_password: str
 
 
 class ItemDetailBase(BaseModel):
