@@ -5,7 +5,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from api.branch.controllers import get_branch_by_name
 from api.item_detail.controllers import get_item_details_by_name
-from api.employee.controllers import get_employee_by_email
+from api.employee.controllers import get_employee_by_sesa
 
 
 
@@ -21,12 +21,14 @@ def add_item(db:Session,item:schemas.ItemCreate):
     #check Validity of Data
     item_details = get_item_details_by_name(db,item.item_detail_name)
     branch=get_branch_by_name(db,item.branch_name)
-    employee=get_employee_by_email(db,item.employee_email)
+    employee=get_employee_by_sesa(db,item.employee_sesa_id)
     
     if item_details is None or branch is None or employee is None:
         raise HTTPException(status_code=404, detail="item details or branch or employee is Not found")
     
     item_details[0].quantity=item_details[0].quantity +1
+    db.commit()
+    db.refresh(item_details)
     item.branch_id=branch[0].id
     item.item_detail_id=item_details[0].id
     db_item = models.Item(**item.model_dump())
@@ -39,13 +41,16 @@ def add_item(db:Session,item:schemas.ItemCreate):
                                                 type=models.OperationTypesEnum.create))
     return db_item
 
+def get_item_by_se_id(db:Session,item_se_id:int) -> models.Item | None:
+    return db.query(models.Item).filter(models.Item.serial_number==item_se_id).first()
 
-
-
-
-
-
-
+def update_item_sautes(db:Session,statues:models.StatusEnum,item_se_id:int) -> models.Item | None:
+    item= get_item_by_se_id(db,item_se_id)
+    if item is None:
+         raise HTTPException(status_code=404, detail="item is Not found")
+    item[0].status=statues
+    db.commit()
+    db.refresh(item)
 
 
 

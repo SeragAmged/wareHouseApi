@@ -9,8 +9,11 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
+from api import schemas
 from api.employee import controllers
-from api.schemas import Token, Employee
+from api.schemas import TokenData, Employee, Token
+from utils import models
+from utils.database import get_db
 
 
 class AuthHandler:
@@ -37,30 +40,23 @@ class AuthHandler:
         return user
 
     @staticmethod
-    def create_access_token(data: dict):
+    def create_access_token(data: dict) -> str:
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(minutes=60)
         to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, AuthHandler.__secret)
+        return jwt.encode(to_encode, AuthHandler.__secret, algorithm="HS256")
 
     @staticmethod
-    async def get_current_user(db: Session, token: str = Depends(__oauth2_scheme)):
+    async def get_current_user(db: Session = Depends(get_db), token: str = Depends(__oauth2_scheme)) -> models.Employee:
+        print(token)
         payload = jwt.decode(token, AuthHandler.__secret, algorithms=["HS256"])
-        username: str = payload.get("sub")
+        emp_email: str = payload.get("sub")
         exp: datetime = payload.get("exp")
-        if username is None:
-            raise HTTPException(401, "Could not validate credentials", {
-                                "WWW-Authenticate": "Bearer"})
+        if emp_email is None:
+            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
         if exp < datetime.utcnow():
-            raise HTTPException(401, "Session expired", {
-                                "WWW-Authenticate": "Bearer"})
-        token_data = Token(username=username)
-        user = controllers.get_employee_by_id(db, id=token_data.employee_id)
+            raise HTTPException(401, "Session expired", {"WWW-Authenticate": "Bearer"})
+        user = controllers.get_employee_by_email(db, emp_email)
         if user is None:
-            raise HTTPException(401, "Could not validate credentials", {
-                                "WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
         return user
-
-    @staticmethod
-    async def get_current_active_user(db: Session, current_user: Employee = Depends(get_current_user)):
-        return controllers.get_employee_by_id(db, current_user.id)

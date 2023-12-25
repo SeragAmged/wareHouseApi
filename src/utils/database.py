@@ -20,3 +20,11 @@ engine = create_engine(connection_string, echo=True)
 
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
+async def get_db():
+    db = session
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 
 from api import schemas
@@ -27,6 +27,9 @@ def get_employee_by_email(db: Session, email: str) -> models.Employee | None:
 def get_all_employees(db: Session, skip: int = 0, limit: int = 100) -> List[models.Employee]:
     return db.query(models.Employee).offset(skip).limit(limit).all()
 
+def get_employee_by_token(db: Session, token: str) -> models.Employee:
+    return db.query(models.Token).filter(models.Token.token == token).first()
+
 
 def check_uniqueness(db: Session, employee: schemas.EmployeeBase) -> int:
     if get_employee_by_sesa(db, employee.sesa_id):
@@ -40,9 +43,10 @@ def check_uniqueness(db: Session, employee: schemas.EmployeeBase) -> int:
 
 
 def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Employee:
-    if validators.is_sesa_id_valid(employee.sesa_id):
+    # TODO: Check if branch being referenced exists
+    if not validators.is_sesa_id_valid(employee.sesa_id):
         raise HTTPException(422, {"error": "Given sesa id is invalid", "field": "sesa_id"})
-    if validators.is_valid_email(employee.email):
+    if not validators.is_valid_email(employee.email):
         raise HTTPException(422, {"error": "Given email is invalid", "field": "email"})
     unique = check_uniqueness(db, employee)
     if unique == 1:
@@ -53,8 +57,9 @@ def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Emp
         raise HTTPException(422, {"error": "Employee with same email address already registered", "field": "email"})
 
     emp_model = employee.model_dump()
-    emp_model["hashed_password"] = auth.AuthHandler
-    db_employee = models.Employee(**employee.model_dump())
+    emp_model["hashed_password"] = auth.AuthHandler.get_password_hash(emp_model["password"])
+    del emp_model["password"]
+    db_employee = models.Employee(**emp_model)
     db.add(db_employee)
     db.commit()
     db.refresh(db_employee)
@@ -67,7 +72,7 @@ def update_employee(db: Session, sesa_id: int, employee: schemas.EmployeeCreate)
         raise HTTPException(401, "Employee doesn't exist (How did you get here?")
     # TODO: check if user has the permission to update
 
-    if validators.is_sesa_id_valid(employee.sesa_id):
+    if not validators.is_sesa_id_valid(employee.sesa_id):
         raise HTTPException(422, {"error": "Given sesa id is invalid", "field": "sesa_id"})
     if validators.is_valid_email(employee.email):
         raise HTTPException(422, {"error": "Given email is invalid", "field": "email"})
@@ -90,11 +95,19 @@ def delete_employee(db: Session, sesa_id: int) -> None:
     # TODO: check if user has the permission to delete
     if get_employee_by_sesa(db=db, sesa_id=sesa_id) is None:
         raise HTTPException(401, "Employee doesn't exist (How did you get here?")
-
     db_employee = db.query(models.Employee).filter(models.Employee.sesa_id == sesa_id).first()
     db.delete(db_employee)
     db.commit()
 
+
+def create_token(db: Session, employee: schemas.Employee, token_base: schemas.TokenBase) -> models.Token:
+    token_dumb = token_base.model_dump()
+    token_dumb["employee_id"] = employee.id
+    db_token = models.Token(**token_dumb)
+    db.add(db_token)
+    db.commit()
+    db.refresh(db_token)
+    return db_token
 
 # TODO:
 # add itemDetail

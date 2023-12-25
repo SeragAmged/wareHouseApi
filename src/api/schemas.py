@@ -8,18 +8,16 @@ default_pdf: str = "No pdf!"
 
 
 class TokenBase(BaseModel):
-    employee_id: int
-    token: str
-    expiry_date: date
-
-
-class TokenCreate(TokenBase):
-    pass
+    access_token: str
+    token_type: str
 
 
 class Token(TokenBase):
-    id: int
-    employee: "Employee"
+    emp_id: int
+
+
+class TokenData(BaseModel):
+    email: str = None
 
 
 class BranchBase(BaseModel):
@@ -46,7 +44,7 @@ class EmployeeBase(BaseModel):
     last_name: str
     email: str
     phone: Optional[str]
-    role: str = "SR"
+    role: str = "user"
 
 
 class EmployeeCreate(EmployeeBase):
@@ -106,7 +104,7 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     item_detail_name : str
     branch_name : str
-    employee_email : str
+    employee_sesa_id : int
 
 
 class Item(ItemBase):

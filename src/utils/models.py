@@ -83,8 +83,8 @@ class Token(Base):
     __tablename__ = 'token'
     id = Column(Integer, primary_key=True,  autoincrement=True, index=True)
     employee_id = Column(Integer, ForeignKey(Employee.id), nullable=False)
-    token = Column(String(255), nullable=False)
-    expiry_date = Column(Date, nullable=False)
+    access_token = Column(String(511), nullable=False)
+    token_type = Column(String(32), nullable=False)
 
     employee = relationship("Employee", back_populates="tokens")
 
