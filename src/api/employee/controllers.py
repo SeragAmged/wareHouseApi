@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from api import schemas
@@ -100,9 +100,9 @@ def delete_employee(db: Session, sesa_id: int) -> None:
     db.commit()
 
 
-def create_token(db: Session, employee: schemas.Employee, token_base: schemas.TokenBase) -> models.Token:
+def add_token(db: Session, employee: schemas.Employee, token_base: schemas.TokenBase) -> models.Token:
     token_dumb = token_base.model_dump()
-    token_dumb["employee_id"] = employee.id
+    token_dumb["employee"] = employee
     db_token = models.Token(**token_dumb)
     db.add(db_token)
     db.commit()

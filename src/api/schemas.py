@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import date, time, datetime,  timezone
+from datetime import date, time
 from pydantic import BaseModel
 from utils.models import CommentTypesEnum, StatusEnum, OperationTypesEnum
 
@@ -13,11 +13,7 @@ class TokenBase(BaseModel):
 
 
 class Token(TokenBase):
-    emp_id: int
-
-
-class TokenData(BaseModel):
-    email: str = None
+    employee: "Employee"
 
 
 class BranchBase(BaseModel):
@@ -53,9 +49,8 @@ class EmployeeCreate(EmployeeBase):
 
 class Employee(EmployeeBase):
     id: int
-    branch: Branch
+    branch: "BranchBase"
     hashed_password: str
-    tokens: List["Token"] = []
     comments: List["Comment"] = []
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
@@ -139,7 +134,7 @@ class CommentCreate(CommentBase):
 class Comment(CommentBase):
     id: int
     item: Item
-    employee: Employee
+    employee: "Employee"
 
     class Config:
         from_attributes = True

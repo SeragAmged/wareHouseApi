@@ -1,17 +1,13 @@
-from typing import Optional
-
 import jwt
-from fastapi import HTTPException, Security, Depends, security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
-from jose import JWTError
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer, OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
 from api import schemas
-from api.employee import controllers
-from api.schemas import TokenData, Employee, Token
+from api.employee import controllers as cr
 from utils import models
 from utils.database import get_db
 
@@ -31,13 +27,15 @@ class AuthHandler:
         return AuthHandler.__pwd_context.verify(plain_password, hashed_password)
 
     @staticmethod
-    def authenticate_user(db: Session, email: str, password: str):
-        user = controllers.get_employee_by_email(db, email)
-        if not user:
-            return False
-        if not AuthHandler.verify_password(password, user.hashed_password):
-            return False
-        return user
+    def authenticate_user(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+        exception = HTTPException(401, "Incorrect username or password", {"WWW-Authenticate": "Bearer"})
+        user = cr.get_employee_by_email(db, form_data.username)
+        if not user or not AuthHandler.verify_password(form_data.password, user.hashed_password):
+            raise exception
+        access_token = AuthHandler.create_access_token(data={"sub": user.email})
+        token_data = {"access_token": access_token, "token_type": "bearer"}
+        cr.add_token(db, user, schemas.TokenBase(**token_data))
+        return token_data
 
     @staticmethod
     def create_access_token(data: dict) -> str:
@@ -48,15 +46,14 @@ class AuthHandler:
 
     @staticmethod
     async def get_current_user(db: Session = Depends(get_db), token: str = Depends(__oauth2_scheme)) -> models.Employee:
-        print(token)
         payload = jwt.decode(token, AuthHandler.__secret, algorithms=["HS256"])
         emp_email: str = payload.get("sub")
-        exp: datetime = payload.get("exp")
+        exp: int = payload.get("exp")
         if emp_email is None:
             raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
-        if exp < datetime.utcnow():
+        if exp < datetime.utcnow().timestamp():
             raise HTTPException(401, "Session expired", {"WWW-Authenticate": "Bearer"})
-        user = controllers.get_employee_by_email(db, emp_email)
+        user = cr.get_employee_by_email(db, emp_email)
         if user is None:
             raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
         return user
