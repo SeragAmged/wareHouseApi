@@ -4,20 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api import schemas
-from utils.database import session
+from utils.database import get_db
 from . import controllers as cr
 from api.schemas import BranchCreate
 
 branch_router = APIRouter()
 
 tags: List[str | Enum] = ["branch"]
-
-def get_db():
-    db = session
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @branch_router.post('/branches', response_model=schemas.Branch, tags=tags)
