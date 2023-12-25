@@ -16,6 +16,9 @@ def add_item_record(db:Session,item_record:schemas.ItemRecordCreate) -> models.I
     db.add(db_item_record)
     db.commit()
     db.refresh(db_item_record)
+    
+def get_item_records(db:Session,skip: int = 0, limit: int = 100) -> list[models.ItemRecord]:
+    return db.query(models.ItemRecord).order_by(models.ItemRecord.date).offset(skip).limit(limit).all()
 
 def add_item(db:Session,item:schemas.ItemCreate):
     #check Validity of Data
@@ -23,14 +26,23 @@ def add_item(db:Session,item:schemas.ItemCreate):
     branch=get_branch_by_name(db,item.branch_name)
     employee=get_employee_by_sesa(db,item.employee_sesa_id)
     
-    if item_details is None or branch is None or employee is None:
-        raise HTTPException(status_code=404, detail="item details or branch or employee is Not found")
     
-    item_details[0].quantity=item_details[0].quantity +1
-    db.commit()
-    db.refresh(item_details)
-    item.branch_id=branch[0].id
-    item.item_detail_id=item_details[0].id
+    if item_details is None :
+        raise HTTPException(status_code=404, detail="item details  is Not found")
+    if  branch is None :
+        raise HTTPException(status_code=404, detail="branch is Not found")
+    if employee is None:
+        raise HTTPException(status_code=404, detail=" employee is Not found")
+    
+    employee = models.Item(**employee.model_dump())
+    branch = models.Item(**branch.model_dump())
+    item_details = models.Item(**item_details.model_dump())
+    
+    # item_details[0].quantity=item_details[0].quantity +1
+    # db.commit()
+    # db.refresh(item_details)
+    item.branch_id=branch.id
+    item.item_detail_id=item_details.id
     db_item = models.Item(**item.model_dump())
     db.add(db_item)
     db.commit()
@@ -38,7 +50,7 @@ def add_item(db:Session,item:schemas.ItemCreate):
     
     #Add Item Record 
     add_item_record(db,schemas.ItemRecordCreate(employee_id=employee[0].id,item_id=db_item[0].id,
-                                                type=models.OperationTypesEnum.create))
+                                                operation_type=models.OperationTypesEnum.create))
     return db_item
 
 def get_item_by_se_id(db:Session,item_se_id:int) -> models.Item | None:

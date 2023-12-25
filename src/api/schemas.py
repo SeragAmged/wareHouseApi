@@ -69,7 +69,7 @@ class Employee(EmployeeBase):
 
 class ItemDetailBase(BaseModel):
     name: str
-    image_link: str = default_item_detail_image
+    image_link: str
     category: Optional[str]
     details: Optional[str]
     
@@ -91,8 +91,8 @@ class ItemDetail(ItemDetailBase):
 
 class ItemBase(BaseModel):
     se_id: int
-    item_detail_id: int =0
-    branch_id: int = 0
+    item_detail_id: int
+    branch_id: int
     serial_number: int
     calibratable: bool
     calibration_date: Optional[date]
@@ -234,19 +234,18 @@ class ItemDetailRecord(ItemDetailRecordBase):
 class ItemRecordBase(BaseModel):
     employee_id: int
     item_id: int
-    type: OperationTypesEnum
-
+    operation_type: OperationTypesEnum
+    
 
 class ItemRecordCreate(ItemRecordBase):
     pass
 
-
 class ItemRecord(ItemRecordBase):
-    date: date
-    time: time
     id: int
     item: Item
     employee: Employee
+    date: date
+    time: time
 
     class Config:
-        from_attributes = True
+        orm_mode = True
