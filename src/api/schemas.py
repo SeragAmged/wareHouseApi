@@ -106,7 +106,7 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     item_detail_name : str
     branch_name : str
-    employee_email : str
+    employee_sesa_id : int
 
 
 class Item(ItemBase):
