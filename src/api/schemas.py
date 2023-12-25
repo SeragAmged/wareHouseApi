@@ -17,7 +17,7 @@ class Token(TokenBase):
 
 
 class TokenData(BaseModel):
-    email: str = None
+    email: str | None = None
 
 
 class BranchBase(BaseModel):
@@ -72,7 +72,7 @@ class ItemDetailBase(BaseModel):
     image_link: str = default_item_detail_image
     category: Optional[str]
     details: Optional[str]
-    
+
     data_sheet_link: Optional[str] = default_pdf
 
 
@@ -91,7 +91,7 @@ class ItemDetail(ItemDetailBase):
 
 class ItemBase(BaseModel):
     se_id: int
-    item_detail_id: int =0
+    item_detail_id: int = 0
     branch_id: int = 0
     serial_number: int
     calibratable: bool
@@ -102,17 +102,17 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    item_detail_name : str
-    branch_name : str
-    employee_sesa_id : int
+    item_detail_name: str
+    branch_name: str
+    employee_sesa_id: int
 
 
 class Item(ItemBase):
     id: int
     detail: ItemDetail
     branch: Branch
-    
-    booked: bool =False
+
+    booked: bool = False
     comments: List["Comment"] = []
     check_outs: List["CheckOut"] = []
     check_ins: List["CheckIn"] = []
@@ -182,7 +182,7 @@ class CheckOutCreate(CheckOutBase):
 
 class CheckOut(CheckOutBase):
     id: int
-    
+
     item: Item
     employee: Employee
 
