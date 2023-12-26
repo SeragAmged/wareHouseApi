@@ -5,8 +5,7 @@ from api import schemas
 from typing import List
 from sqlalchemy.orm import Session
 
-# read
-
+# get
 
 def get_branch_by_id(db: Session, id: int) -> models.Branch | None:
     return db.query(models.Branch).filter(models.Branch.id == id).first()
@@ -62,7 +61,7 @@ def add_branch(db: Session, branch: schemas.BranchCreate) -> models.Branch:
     db.refresh(db_branch)
     return db_branch
 
-
+#delete
 def delete_branch_by_name(db: Session, name: str) -> None:
     """deletes branch by name
 
@@ -84,7 +83,7 @@ def delete_branch_by_name(db: Session, name: str) -> None:
     db.delete(db_branch)
     db.commit()
 
-
+#update
 def update_branch_by_name(db: Session, name: str, branch: schemas.BranchCreate) -> models.Branch:
     """
     update branch name by branch name.
@@ -114,6 +113,7 @@ def update_branch_by_name(db: Session, name: str, branch: schemas.BranchCreate) 
     return db_branch_update
 
 
+
 def get_branch_employees(db: Session, branch_name: str) -> List[models.Employee]:
     """
     Get a list of employees for the given branch name.
@@ -134,9 +134,6 @@ def get_branch_employees(db: Session, branch_name: str) -> List[models.Employee]
     else:
         raise HTTPException(
             status_code=404, detail="Branch name is not found")
-
-
-
 
 def get_branch_items(db: Session, branch_name: str) -> List[models.Item]:
     """

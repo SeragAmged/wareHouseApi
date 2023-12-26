@@ -44,6 +44,6 @@ async def update_employee(sesa_id: str, employee: schemas.EmployeeCreate, db: Se
     db_employee = cr.get_employee_by_sesa(db, int(sesa_id))
     if db_employee is None:
         raise HTTPException(401, "Employee doesn't exist.")
-    if db_employee.sesa_id != current_user.sesa_id and current_user.role != "admin":
+    if db_employee.sesa_id != current_user.sesa_id and current_user.role != "admin": # type: ignore
         raise HTTPException(403, "You don't have permission to edit this account!")
     return cr.update_employee(db=db, employee=employee)

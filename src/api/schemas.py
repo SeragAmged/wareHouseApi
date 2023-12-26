@@ -1,5 +1,5 @@
-from typing import List, Optional
-from datetime import date, time
+from typing import Any, List, Optional
+from datetime import date, datetime, time
 from pydantic import BaseModel
 from utils.models import CommentTypesEnum, StatusEnum, OperationTypesEnum
 
@@ -7,6 +7,7 @@ default_item_detail_image: str = "https://demofree.sirv.com/nope-not-here.jpg"
 default_pdf: str = "No pdf!"
 
 
+# --------TOKEN-----------#
 class TokenBase(BaseModel):
     access_token: str
     token_type: str
@@ -15,6 +16,8 @@ class TokenBase(BaseModel):
 class Token(TokenBase):
     employee: "Employee"
 
+
+# --------BRANCH-----------#
 
 class BranchBase(BaseModel):
     name: str
@@ -26,11 +29,13 @@ class BranchCreate(BranchBase):
 
 class Branch(BranchBase):
     id: int
-    employees: List["Employee"] = []
-    items: List["Item"] = []
+    # employees: List["Employee"] = []
+    # items: List["ItemBase"] = []
 
     class Config:
         from_attributes = True
+
+# --------EMPLOYEE-----------#
 
 
 class EmployeeBase(BaseModel):
@@ -45,17 +50,16 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     password: str
+    branch_name: str
 
 
 class Employee(EmployeeBase):
     id: int
-    branch: "BranchBase"
-    comments: List["Comment"] = []
-    check_outs: List["CheckOut"] = []
-    check_ins: List["CheckIn"] = []
-    books: List["Book"] = []
-    add_item_detail_records: List["ItemDetailRecord"] = []
-    add_item_records: List["ItemRecord"] = []
+    branch: "Branch"
+    # comments: List["Comment"] = []
+    # check_outs: List["CheckOutBase"] = []
+    # check_ins: List["CheckInBase"] = []
+    # books: List["BookBase"] = []
 
     class Config:
         from_attributes = True
@@ -64,13 +68,14 @@ class Employee(EmployeeBase):
 class EmployeeSecret(Employee):
     hashed_password: str
 
+# --------ITEM_DETAIL-----------#
+
 
 class ItemDetailBase(BaseModel):
     name: str
     image_link: str
     category: Optional[str]
     details: Optional[str]
-
     data_sheet_link: Optional[str] = default_pdf
 
 
@@ -81,10 +86,12 @@ class ItemDetailCreate(ItemDetailBase):
 class ItemDetail(ItemDetailBase):
     id: int
     quantity: int
-    items: List["Item"] = []
+    # items: List["ItemBase"] = []
 
     class Config:
         from_attributes = True
+
+# --------ITEM-----------#
 
 
 class ItemBase(BaseModel):
@@ -102,24 +109,23 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     item_detail_name: str
     branch_name: str
-    employee_sesa_id: int
 
 
 class Item(ItemBase):
     id: int
-    detail: ItemDetail
-    branch: Branch
-
     booked: bool = False
-    comments: List["Comment"] = []
-    check_outs: List["CheckOut"] = []
-    check_ins: List["CheckIn"] = []
-    book: Optional["Book"]
-    add_item_record: List["ItemRecord"] = []
+    detail: ItemDetailBase
+    branch: BranchBase
+    # book: Optional["BookBase"]
+    # comments: List["CommentBase"] = []
+    # check_outs: List["CheckOutBase"] = []
+    # check_ins: List["CheckInBase"] = []
 
     class Config:
         from_attributes = True
 
+
+# --------COMMENT-----------#
 
 class CommentBase(BaseModel):
     employee_id: int
@@ -136,11 +142,13 @@ class CommentCreate(CommentBase):
 
 class Comment(CommentBase):
     id: int
-    item: Item
-    employee: "Employee"
+    item: "ItemBase"
+    employee: "EmployeeBase"
 
     class Config:
         from_attributes = True
+
+# --------BOOK-----------#
 
 
 class BookBase(BaseModel):
@@ -162,6 +170,8 @@ class Book(BookBase):
     class Config:
         from_attributes = True
 
+# --------CHECK-OUT-----------#
+
 
 class CheckOutBase(BaseModel):
     item_id: int
@@ -170,8 +180,8 @@ class CheckOutBase(BaseModel):
     jop_name: Optional[str]
     company_lended: Optional[str]
     estimated_Check_in_Date: Optional[date]
-    date: date
-    time: time
+    date: Any = datetime.utcnow().date()
+    time: Any = datetime.utcnow().time()
 
 
 class CheckOutCreate(CheckOutBase):
@@ -180,19 +190,21 @@ class CheckOutCreate(CheckOutBase):
 
 class CheckOut(CheckOutBase):
     id: int
-
-    item: Item
-    employee: Employee
+    item: ItemBase
+    employee: EmployeeBase
+    returned: bool
 
     class Config:
         from_attributes = True
+
+# --------CHECK-IN-----------#
 
 
 class CheckInBase(BaseModel):
     item_id: int
     employee_id: int
-    date: date
-    time: time
+    date: Any = datetime.utcnow().date()
+    time: Any = datetime.utcnow().time()
 
 
 class CheckInCreate(CheckInBase):
@@ -201,49 +213,8 @@ class CheckInCreate(CheckInBase):
 
 class CheckIn(CheckInBase):
     id: int
-    item: Item
-    employee: Employee
+    item: ItemBase
+    employee: EmployeeBase
 
     class Config:
         from_attributes = True
-
-
-class ItemDetailRecordBase(BaseModel):
-    employee_id: int
-    item_detail_id: int
-    date: date
-    time: time
-    type: OperationTypesEnum
-
-
-class ItemDetailRecordCreate(ItemDetailRecordBase):
-    pass
-
-
-class ItemDetailRecord(ItemDetailRecordBase):
-    id: int
-    item_detail: ItemDetail
-    employee: Employee
-
-    class Config:
-        from_attributes = True
-
-
-class ItemRecordBase(BaseModel):
-    employee_id: int
-    item_id: int
-    operation_type: OperationTypesEnum
-    
-
-class ItemRecordCreate(ItemRecordBase):
-    pass
-
-class ItemRecord(ItemRecordBase):
-    id: int
-    item: Item
-    employee: Employee
-    date: date
-    time: time
-
-    class Config:
-        orm_mode = True

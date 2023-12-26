@@ -1,114 +1,216 @@
 from fastapi import HTTPException
+from sqlalchemy import and_
+
 from utils import models
 from api import schemas
 from typing import List
 from sqlalchemy.orm import Session
 from api.branch.controllers import get_branch_by_name
-from api.item_detail.controllers import get_item_details_by_name
+from api.item_detail.controllers import get_item_detail_by_name
 from api.employee.controllers import get_employee_by_sesa
 
 
+# Add Item
 
-#Add Item 
 
-def add_item_record(db:Session,item_record:schemas.ItemRecordCreate) -> models.ItemRecord | None:
-    db_item_record = models.ItemRecord(**item_record.model_dump())
-    db.add(db_item_record)
-    db.commit()
-    db.refresh(db_item_record)
-    
-def get_item_records(db:Session,skip: int = 0, limit: int = 100) -> list[models.ItemRecord]:
-    return db.query(models.ItemRecord).order_by(models.ItemRecord.date).offset(skip).limit(limit).all()
+def get_item_by_id(db: Session, item_id: int) -> models.Item | None:
+    return db.query(models.Item).filter(models.Item.id == item_id).first()
 
-def add_item(db:Session,item:schemas.ItemCreate):
-    #check Validity of Data
-    item_details = get_item_details_by_name(db,item.item_detail_name)
-    branch=get_branch_by_name(db,item.branch_name)
-    employee=get_employee_by_sesa(db,item.employee_sesa_id)
-    
-    
-    if item_details is None :
-        raise HTTPException(status_code=404, detail="item details  is Not found")
-    if  branch is None :
+
+def get_item_by_se_id(db: Session, item_se_id: int) -> models.Item | None:
+    return db.query(models.Item).filter(models.Item.se_id == item_se_id).first()
+
+
+def get_by_serial(db: Session, item_serial_number: int) -> models.Item | None:
+    return db.query(models.Item).filter(models.Item.serial_number == item_serial_number).first()
+
+
+def validate_item_exist(db: Session, item: schemas.ItemCreate):
+    if get_item_by_se_id(db, item.se_id):
+        raise HTTPException(status_code=400, detail="se_id is already used")
+    if get_by_serial(db, item.serial_number):
+        raise HTTPException(status_code=400, detail="serial is already used")
+
+
+def validate_item_new(db: Session, item: schemas.ItemCreate) -> bool:
+    if get_item_by_se_id(db, item.se_id) is None and get_by_serial(db, item.serial_number) is None:
+        return True
+    else:
+        return False
+
+
+def get_items_by_name(db: Session, name: str) -> List[models.Item]:
+    db_item_details = get_item_detail_by_name(db=db, name=name)
+    if db_item_details is not None:
+        return db.query(models.Item).order_by(models.Item.se_id).filter(models.Item.item_detail_id == db_item_details.id).all()
+    else:
+        raise HTTPException(status_code=404, detail="item is Not found")
+
+
+def get_items(db: Session, skip: int = 0, limit: int = 100) -> list[models.Item]:
+    return db.query(models.Item).order_by(models.Item.se_id).offset(skip).limit(limit).all()
+
+
+def update_item_sautes(db: Session, statues: models.StatusEnum, item_se_id: int) -> models.Item | None:
+    item = get_item_by_se_id(db, item_se_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="item is Not found")
+    else:
+        item.status = statues  # type: ignore
+        db.commit()
+        db.refresh(item)
+
+
+def add_item(db: Session, item: schemas.ItemCreate) -> models.Item:
+    validate_item_exist(db, item)
+    # check Validity of Data
+    item_details = get_item_detail_by_name(db, item.item_detail_name)
+    branch = get_branch_by_name(db, item.branch_name)
+
+    if item_details is None:
+        raise HTTPException(
+            status_code=404, detail="item details  is Not found")
+    if branch is None:
         raise HTTPException(status_code=404, detail="branch is Not found")
-    if employee is None:
-        raise HTTPException(status_code=404, detail=" employee is Not found")
-    
-    employee = models.Item(**employee.model_dump())
-    branch = models.Item(**branch.model_dump())
-    item_details = models.Item(**item_details.model_dump())
-    
-    # item_details[0].quantity=item_details[0].quantity +1
-    # db.commit()
-    # db.refresh(item_details)
-    item.branch_id=branch.id
-    item.item_detail_id=item_details.id
-    db_item = models.Item(**item.model_dump())
+
+    dumb_item = item.model_dump()
+    dumb_item['branch_id'] = branch.id
+    dumb_item['item_detail_id'] = item_details.id
+
+    item_details.quantity += len(get_items_by_name(db=db,  # type: ignore
+                                 name=dumb_item['item_detail_name'])) + 1
+    del dumb_item['item_detail_name']
+    del dumb_item['branch_name']
+    db_item = models.Item(**dumb_item)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    
-    #Add Item Record 
-    add_item_record(db,schemas.ItemRecordCreate(employee_id=employee[0].id,item_id=db_item[0].id,
-                                                operation_type=models.OperationTypesEnum.create))
+
     return db_item
 
-def get_item_by_se_id(db:Session,item_se_id:int) -> models.Item | None:
-    return db.query(models.Item).filter(models.Item.serial_number==item_se_id).first()
 
-def update_item_sautes(db:Session,statues:models.StatusEnum,item_se_id:int) -> models.Item | None:
-    item= get_item_by_se_id(db,item_se_id)
-    if item is None:
-         raise HTTPException(status_code=404, detail="item is Not found")
-    item[0].status=statues
-    db.commit()
-    db.refresh(item)
+def update_item_by_Se_id(db: Session, item_se_id: int, item: schemas.ItemCreate) -> models.Item:
+
+    db_item_update = get_item_by_se_id(db, item_se_id)
+    if db_item_update:
+        if (validate_item_new(db, item)):
+            # check Validity of Data
+            item_details = get_item_detail_by_name(db, item.item_detail_name)
+            branch = get_branch_by_name(db, item.branch_name)
+
+            if item_details is None:
+                raise HTTPException(
+                    status_code=404, detail="item detail name is Not found")
+            if branch is None:
+                raise HTTPException(
+                    status_code=404, detail="branch is Not found")
+
+            for key, value in item.model_dump().items():
+                if key in ['item_detail_id', 'branch_id', 'se_id', 'serial_number']:
+                    continue
+                else:
+                    setattr(db_item_update, key, value)
+            db.commit()
+            db.refresh(db_item_update)
+            return db_item_update
+        else:
+            raise HTTPException(
+                status_code=400, detail="new item se id  or serial is used")
+    else:
+        raise HTTPException(
+            status_code=404, detail="item se_id  is Not found")
 
 
+def check_out_item(db: Session, item_se_id: int, check_out: schemas.CheckOutCreate, employee_sesa_id: int) -> models.CheckOut | None:
+    item_db = get_item_by_se_id(db, item_se_id)
+    employee_db = get_employee_by_sesa(db, sesa_id=employee_sesa_id)
+    if item_db and employee_db:
+        if item_db.status in [models.StatusEnum.available, models.StatusEnum.calibration_due, models.StatusEnum.test_and_tag_due]:
+            if check_out.company_lended:
+                update_item_sautes(db, item_se_id=item_se_id,
+                                   statues=models.StatusEnum.lended)
+            elif check_out.work_order or check_out.jop_name:
+                update_item_sautes(db, item_se_id=item_se_id,
+                                   statues=models.StatusEnum.job_assigned)
+
+            check_out_db = models.CheckOut(**check_out.model_dump())
+            check_out_db.item_id = item_db.id
+            check_out_db.employee_id = employee_db.id
+            db.add(check_out_db)
+            db.commit()
+            db.refresh(check_out_db)
+            return check_out_db
+        else:
+            raise HTTPException(
+                status_code=400, detail="item is Not available")
+    else:
+        raise HTTPException(
+            status_code=404, detail="item is Not found")
 
 
+def get_check_outs(db: Session, skip: int = 0, limit: int = 100) -> List[models.CheckOut]:
+    return db.query(models.CheckOut).order_by(models.CheckOut.date).offset(skip).limit(limit).all()
 
 
-# NOTE: DONT FORGET TO UPDATE STATUS IF NEEDED
-# NOTE: admin and user is only for routs
+def get_check_ins(db: Session, skip: int = 0, limit: int = 100) -> List[models.CheckIn]:
+    return db.query(models.CheckIn).order_by(models.CheckIn.date).offset(skip).limit(limit).all()
+
+
+def get_check_out_by_pairs(db: Session, item_se_id: int, employee_sesa_id: int) -> models.CheckOut:
+    item_db = get_item_by_se_id(db, item_se_id)
+    employee_db = get_employee_by_sesa(db, employee_sesa_id)
+    if employee_db and item_db:
+        return db.query(models.CheckOut).order_by(models.CheckOut.date).filter(and_(models.CheckOut.employee_id == employee_db.id, models.CheckOut.item_id == item_db.id, models.CheckOut.returned == False)).first()
+    raise HTTPException(
+        status_code=404, detail="check out not found")
+
+
+def check_in_item(db: Session, item_se_id: int, check_in: schemas.CheckInCreate, employee_sesa_id: int) -> models.CheckIn:
+    item_db = get_item_by_se_id(db, item_se_id)
+    employee_db = get_employee_by_sesa(db, sesa_id=employee_sesa_id)
+    if item_db and employee_db:
+        check_out_pair_db = get_check_out_by_pairs(
+            db, item_se_id, employee_sesa_id)
+        if check_out_pair_db:
+            check_in_db = models.CheckIn(**check_in.model_dump())
+            check_in_db.item_id = item_db.id
+            check_in_db.employee_id = employee_db.id
+            update_item_sautes(db, item_se_id=item_se_id,
+                               statues=models.StatusEnum.available)
+            check_out_pair_db.returned = True  # type: ignore
+            db.add(check_in_db)
+            db.commit()
+            db.refresh(check_in_db)
+            return check_in_db
+        else:
+            raise HTTPException(
+                status_code=400, detail="Not authorized")
+
+    else:
+        raise HTTPException(
+            status_code=404, detail="item is Not found or employee")
+
+
+# NOTE: DONT FORGET TO UPDATE STATUS IF NEEDED(Check-out,in, book)
 
 # TODO:
 
 # ONLY FOR ADMINS
-
-# Add item
-# Adding new item depends on itemdetail name not id
-# also add records for it with type from the enums
-
-# delete item with se_id
-# also add records for it with type from the enums
-
-# update item with se_id
-# also add records for it with type from the enums
-
-#update Item status
-
+# authenticate Add item
 # update item book
 # update item comment
-
-
-
-# read item records
-# read item check-ins
-# read item check-outs
 # ------------------------------ #
 
 
-# sys (no routs)
-# get item by id
-
 # USER ROUTS
 
-# when get items list it with its itemdetail (NOTE)
-# get item by se_id
+# create comment
+# book item if it's available
 
 
 # get item comments using se_id and display the employee name(first, last) of each comment , sesa_id and rule if admin
 
+
+# DONT DO!!!!!!!!!!!
 # if items is jop assigned out return employee assigner
 # if items is booked out return employee booker and book details

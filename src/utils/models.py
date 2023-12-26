@@ -184,16 +184,18 @@ class CheckOut(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=func.current_date(), nullable=False)
+                  nullable=False)  # default=func.current_date(),
     time = Column(Time, index=True,
-                  default=func.current_time(), nullable=False)
-    
+                  nullable=False)  # default=func.current_time(),
+
     work_order = Column(Integer, nullable=True)
     jop_name = Column(String(255), nullable=True)
 
     company_lended = Column(String(255), nullable=True)
 
     estimated_Check_in_Date = Column(Date, nullable=True)
+
+    returned = Column(Boolean, default=False, nullable=False)
 
     item = relationship("Item", back_populates="check_outs")
     employee = relationship("Employee", back_populates="check_outs")
@@ -210,9 +212,9 @@ class CheckIn(Base):
         Employee.id), nullable=False)
 
     date = Column(Date, index=True,
-                  default=func.current_date(), nullable=False)
+                  nullable=False)  # default=func.current_date(),
     time = Column(Time, index=True,
-                  default=func.current_time(), nullable=False)
+                  nullable=False)  # default=func.current_time(),
 
     item = relationship("Item", back_populates="check_ins")
     employee = relationship("Employee", back_populates="check_ins")
