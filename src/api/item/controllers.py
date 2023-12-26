@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from api.branch.controllers import get_branch_by_name
 from api.item_detail.controllers import get_item_detail_by_name
 from api.employee.controllers import get_employee_by_sesa
+from sqlalchemy import func
+from reportlab.pdfgen import canvas
 
 
 # Add Item
@@ -190,6 +192,50 @@ def check_in_item(db: Session, item_se_id: int, check_in: schemas.CheckInCreate,
         raise HTTPException(
             status_code=404, detail="item is Not found or employee")
 
+
+def get_inventory_report(db: Session, branch_name: str):
+    branch_db = get_branch_by_name(db, branch_name)
+    # Query to get overall inventory and stock levels
+    if branch_db:
+        result = db.query(
+            models.Branch.name,
+            func.count(models.Item.id).label('total_items'),
+        ).join(models.Item, models.Branch.id == models.Item.branch_id).group_by(models.Branch.name).all()
+        return result
+
+
+def create_pdf_report(inventory_data, filename='inventory_report.pdf'):
+    pdf = canvas.Canvas(filename)
+
+    # Set up PDF title and headers
+    pdf.setFont("Helvetica", 16)
+    pdf.drawString(100, 800, "Inventory Report")
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(100, 780, "Branch Name")
+    pdf.drawString(250, 780, "Total Items")
+    pdf.drawString(400, 780, "Total Quantity")
+
+    # Add data to the PDF
+    y_position = 760
+    for row in inventory_data:
+        pdf.drawString(100, y_position, row.branch_name)
+        pdf.drawString(250, y_position, str(row.total_items))
+        pdf.drawString(400, y_position, str(row.total_quantity))
+        y_position -= 20
+
+    pdf.save()
+
+
+# if _name_ == "_main_":
+#     from database import get_db
+
+#     # Example of how to use the get_inventory_report function
+#     inventory_report = get_inventory_report(db)
+
+#     # Create and save PDF report
+#     create_pdf_report(inventory_report)
+#     print("PDF report created and saved as 'inventory_report.pdf'")
 
 # NOTE: DONT FORGET TO UPDATE STATUS IF NEEDED(Check-out,in, book)
 

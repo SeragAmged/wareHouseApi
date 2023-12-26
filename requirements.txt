@@ -6,3 +6,4 @@ pyodbc>=5.0.1
 pyjwt>=1.7.1
 passlib
 bcrypt
+reportlab

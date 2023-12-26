@@ -46,3 +46,10 @@ def get_check_outs(db: Session = Depends(get_db)):
 @item_router.get('/checkins', response_model=List[schemas.CheckIn], tags=["check-ins"])
 def get_check_ins(db: Session = Depends(get_db)):
     return cr.get_check_ins(db)
+
+
+@item_router.get('/items/{branch_name}/pdf')
+def generate_report(branch_name: str, db: Session = Depends(get_db)):
+    inventory_report = cr.get_inventory_report(db, branch_name=branch_name)  # type: ignore
+    cr.create_pdf_report(inventory_report)
+    return {"message": "report generated"}
