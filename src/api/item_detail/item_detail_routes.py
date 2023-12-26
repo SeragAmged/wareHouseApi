@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from api import schemas
 from utils.database import get_db
-from . import controllers as cr
+from . import item_detail_controllers as cr
 from api.schemas import ItemDetailCreate
 
 item_details_router = APIRouter()

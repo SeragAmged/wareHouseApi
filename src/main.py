@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from api.routes import router
-from api.branch.routes import branch_router
-from api.employee.routes import employee_router
-from api.item.routes import item_router
-from api.item_detail.routes import item_details_router
+from api.branch.branch_routes import branch_router
+from api.employee.employee_routes import employee_router
+from api.item.item_routes import item_router
+from api.item_detail.item_detail_routes import item_details_router
 from utils.database import engine
 from utils.models import Base
 

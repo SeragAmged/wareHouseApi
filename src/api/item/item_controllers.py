@@ -5,9 +5,9 @@ from utils import models
 from api import schemas
 from typing import List
 from sqlalchemy.orm import Session
-from api.branch.controllers import get_branch_by_name
-from api.item_detail.controllers import get_item_detail_by_name
-from api.employee.controllers import get_employee_by_sesa
+from api.branch.branch_controllers import get_branch_by_name
+from api.item_detail.item_detail_controllers import get_item_detail_by_name
+from api.employee.employee_controllers import get_employee_by_sesa
 from sqlalchemy import func
 from reportlab.pdfgen import canvas
 
@@ -127,7 +127,9 @@ def check_out_item(db: Session, item_se_id: int, check_out: schemas.CheckOutCrea
     item_db = get_item_by_se_id(db, item_se_id)
     employee_db = get_employee_by_sesa(db, sesa_id=employee_sesa_id)
     if item_db and employee_db:
-        if item_db.status in [models.StatusEnum.available, models.StatusEnum.calibration_due, models.StatusEnum.test_and_tag_due]:
+        if item_db.status in [models.StatusEnum.available, models.StatusEnum.calibration_due, models.StatusEnum.test_and_tag_due]:#TODO: or booked by the same employee
+            
+            
             if check_out.company_lended:
                 update_item_sautes(db, item_se_id=item_se_id,
                                    statues=models.StatusEnum.lended)
@@ -191,6 +193,31 @@ def check_in_item(db: Session, item_se_id: int, check_in: schemas.CheckInCreate,
     else:
         raise HTTPException(
             status_code=404, detail="item is Not found or employee")
+
+
+def book_item(db: Session, item_se_id: int, employee_sesa_id: int, book: schemas.BookCreate) -> models.Book:
+    item_db = get_item_by_se_id(db, item_se_id)
+    employee_db = get_employee_by_sesa(db, sesa_id=employee_sesa_id)
+    if item_db and employee_db:
+        if item_db.status in [models.StatusEnum.available, models.StatusEnum.calibration_due, models.StatusEnum.test_and_tag_due]:
+            update_item_sautes(db, item_se_id=item_se_id,
+                               statues=models.StatusEnum.booked)
+            
+            book_db = models.Book(**book.model_dump())
+            book_db.item_id = item_db.id
+            book_db.employee_id = employee_db.id
+            db.add(book_db)
+            db.commit()
+            db.refresh(book_db)
+            return book_db
+        else:
+            raise HTTPException(
+                status_code=400, detail="item is Not available")
+    else:
+        raise HTTPException(
+            status_code=404, detail="item is Not found")
+
+
 
 
 def get_inventory_report(db: Session, branch_name: str):

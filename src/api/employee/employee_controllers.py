@@ -3,7 +3,7 @@ from typing import List
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-import api.branch.controllers
+import api.branch.branch_controllers
 from api import schemas
 from api.auth import auth
 from utils import models, validators
@@ -59,7 +59,7 @@ def verify_attributes(db: Session, employee: schemas.EmployeeBase) -> None:
 def create_employee(db: Session, employee: schemas.EmployeeCreate) -> models.Employee:
     verify_attributes(db, employee)
     emp_model = employee.model_dump()
-    branch_test = api.branch.controllers.get_branch_by_name(
+    branch_test = api.branch.branch_controllers.get_branch_by_name(
         db=db, name=emp_model["branch_name"])
     if branch_test is None:
         raise HTTPException(status_code=404, detail="branch is Not found")

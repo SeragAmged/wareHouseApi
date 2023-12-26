@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
 from api import schemas
-from api.employee import controllers as cr
+from api.employee import employee_controllers as cr
 from utils import models
 from utils.database import get_db
 

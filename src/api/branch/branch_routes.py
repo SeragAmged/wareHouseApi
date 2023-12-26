@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from api import schemas
 from utils.database import get_db
-from . import controllers as cr
+from . import branch_controllers as cr
 from api.schemas import BranchCreate
 
 branch_router = APIRouter()
