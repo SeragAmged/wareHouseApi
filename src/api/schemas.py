@@ -164,8 +164,8 @@ class BookCreate(BookBase):
 
 class Book(BookBase):
     id: int
-    item: Item
-    employee: Employee
+    # item: Item
+    # employee: Employee
 
     class Config:
         from_attributes = True
