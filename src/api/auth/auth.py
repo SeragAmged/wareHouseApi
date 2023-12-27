@@ -1,6 +1,7 @@
 import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jwt import ExpiredSignatureError
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 
@@ -16,7 +17,7 @@ class AuthHandler:
     __security = HTTPBearer()
     __pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     __secret = 'SECRET'
-    __oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+    __oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
     @staticmethod
     def get_password_hash(password):
@@ -45,15 +46,26 @@ class AuthHandler:
         return jwt.encode(to_encode, AuthHandler.__secret, algorithm="HS256")
 
     @staticmethod
-    async def get_current_user(db: Session = Depends(get_db), token: str = Depends(__oauth2_scheme)) -> models.Employee:
-        payload = jwt.decode(token, AuthHandler.__secret, algorithms=["HS256"])
+    def revoke_token(db: Session = Depends(get_db), token: schemas.TokenBase = Depends()):
+        cr.delete_token(db, token.access_token)
+
+    @staticmethod
+    async def get_current_user(db: Session = Depends(get_db), token: schemas.TokenBase = Depends()) -> models.Employee:
+        token = token.access_token
+        try:
+            payload = jwt.decode(token, AuthHandler.__secret, algorithms=["HS256"])
+        except ExpiredSignatureError as e:
+            raise HTTPException(403, "Session expired.", {"WWW-Authenticate": "Bearer"})
+        except Exception:
+            raise HTTPException(403, "An error occurred while fetching you details.", {"WWW-Authenticate": "Bearer"})
+
         emp_email: str = payload.get("sub")
         exp: int = payload.get("exp")
         if emp_email is None:
-            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Could not validate credentials.", {"WWW-Authenticate": "Bearer"})
         if exp < datetime.utcnow().timestamp():
-            raise HTTPException(401, "Session expired", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(403, "Session expired.", {"WWW-Authenticate": "Bearer"})
         user = cr.get_employee_by_email(db, emp_email)
         if user is None:
-            raise HTTPException(401, "Could not validate credentials", {"WWW-Authenticate": "Bearer"})
+            raise HTTPException(401, "Could not validate credentials.", {"WWW-Authenticate": "Bearer"})
         return user

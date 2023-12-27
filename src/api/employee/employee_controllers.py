@@ -105,6 +105,13 @@ def add_token(db: Session, employee: schemas.Employee, token_base: schemas.Token
     return db_token
 
 
+def delete_token(db: Session, token: str):
+    db_token = db.query(models.Token).filter(models.Token.access_token == token).first()
+    if db_token:
+        db.delete(db_token)
+        db.commit()
+
+
 # TODO: ONLY FOR ADMINS
 # if user register with sesa_id in the admins.txt file set his role to admin(NOTE:each line contains sesa_id)
 # ⬆️ ^^ use deferent function for reading the admins file and store it in the memory(variable)
