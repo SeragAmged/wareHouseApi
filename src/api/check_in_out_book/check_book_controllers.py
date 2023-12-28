@@ -1,3 +1,4 @@
+import datetime
 from fastapi import HTTPException
 from sqlalchemy import Column, and_
 from api.item.item_controllers import get_item_by_se_id, update_item_sautes
@@ -6,7 +7,7 @@ from api import item, schemas
 from typing import List
 from sqlalchemy.orm import Session
 from api.employee.employee_controllers import get_employee_by_id, get_employee_by_sesa
-
+from datetime import datetime
 
 def book_item(db: Session, item_se_id: int, employee_sesa_id: int, book: schemas.BookCreate) -> models.Book:
     item_db = get_item_by_se_id(db, item_se_id)
@@ -75,6 +76,8 @@ def check_out_item(db: Session, item_se_id: int, check_out: schemas.CheckOutCrea
             check_out_db = models.CheckOut(**check_out.model_dump())
             check_out_db.item_id = item_db.id
             check_out_db.employee_id = employee_db.id
+            check_out_db.date = datetime.utcnow().date()
+            check_out_db.time = datetime.utcnow().time()
 
             db.add(check_out_db)
             db.commit()
@@ -82,7 +85,7 @@ def check_out_item(db: Session, item_se_id: int, check_out: schemas.CheckOutCrea
             return check_out_db
         else:
             raise HTTPException(
-                status_code=403, detail="not authorized")
+                status_code=402, detail="not authorized")
     else:
         raise HTTPException(
             status_code=404, detail="item is Not found")
@@ -118,6 +121,8 @@ def check_in_item(db: Session, item_se_id: int, check_in: schemas.CheckInCreate,
             update_item_sautes(db, item_se_id=item_se_id,
                                statues=models.StatusEnum.available)
             check_out_pair_db.returned = True  # type: ignore
+            check_in_db.date = datetime.utcnow().date()
+            check_in_db.time = datetime.utcnow().time()
             db.add(check_in_db)
             db.commit()
             db.refresh(check_in_db)

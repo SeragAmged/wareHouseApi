@@ -36,3 +36,9 @@ def generate_report(branch_name: str, db: Session = Depends(get_db)):
     # cr.create_pdf_report(inventory_report)
     # return {"message": "report generated"}
     return cr.get_inventory_report(db, branch_name=branch_name)
+
+
+@item_router.get('/items/{item_se_id}',response_model=schemas.Item, tags=tags)
+async def get_item(item_se_id: int, db: Session = Depends(get_db)):
+    return cr.get_item_by_se_id(db,item_se_id)
+    

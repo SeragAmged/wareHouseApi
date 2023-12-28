@@ -79,7 +79,7 @@ def add_item(db: Session, item: schemas.ItemCreate) -> models.Item:
     dumb_item['branch_id'] = branch.id
     dumb_item['item_detail_id'] = item_details.id
 
-    item_details.quantity += len(get_items_by_name(db=db,  # type: ignore
+    item_details.quantity = len(get_items_by_name(db=db,  # type: ignore
                                  name=dumb_item['item_detail_name'])) + 1
     del dumb_item['item_detail_name']
     del dumb_item['branch_name']
