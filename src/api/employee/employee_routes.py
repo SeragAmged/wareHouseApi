@@ -19,11 +19,6 @@ async def signup(employee: schemas.EmployeeCreate, db: Session = Depends(get_db)
     return cr.create_employee(db=db, employee=employee)
 
 
-@employee_router.post("/signin", response_model=schemas.TokenBase, tags=tags)
-async def login(token: schemas.TokenBase = Depends(AuthHandler.authenticate_user)):
-    return token
-
-
 @employee_router.post("/login", response_model=schemas.TokenBase, tags=tags)
 async def login_with_oauth2(token: schemas.TokenBase = Depends(AuthHandler.authenticate_user)):
     return token
@@ -36,7 +31,6 @@ async def read_users_me(current_user: schemas.Employee = Depends(AuthHandler.get
 
 @employee_router.post("/signout", tags=tags)
 async def signout(token: schemas.TokenBase = Depends(AuthHandler.revoke_token)):
-    AuthHandler.revoke_token(token=token.access_token)
     return {"message": "Successfully signed out"}
 
 
