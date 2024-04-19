@@ -1,9 +1,13 @@
 fastapi[all]>=0.105.0
 uvicorn>=0.24.0
-sqlalchemy[mssql]>=2.0.23
+sqlalchemy[mysql]>=2.0.23
+mysqlclient
 python-jose>=3.3.0
 pyodbc>=5.0.1
 pyjwt>=1.7.1
-passlib
+passlib~=1.7.4
 bcrypt
-reportlab
+reportlab~=4.1.0
+
+pydantic~=2.6.4
+python-dotenv~=1.0.1

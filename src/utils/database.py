@@ -14,7 +14,7 @@ DATABASE_NAME = str(os.getenv('DATABASE_NAME'))
 USER_NAME = str(os.getenv('USER_NAME'))
 PASSWORD = str(os.getenv('PASSWORD'))
 
-connection_string = f"mssql+pyodbc://{USER_NAME}:{PASSWORD}@{SERVER_NAME}/{DATABASE_NAME}?driver={DRIVER_NAME}"
+connection_string = f'mysql+mysqldb://{USER_NAME}:{PASSWORD}@{SERVER_NAME}/{DATABASE_NAME}'
 
 engine = create_engine(connection_string, echo=True)
 
